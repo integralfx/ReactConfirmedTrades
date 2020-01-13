@@ -6,7 +6,7 @@ from .models import Redditor, Trade
 from .serializers import RedditorSerializer, TradeSerializer
 
 
-class RedditorViewSet(viewsets.ModelViewSet):
+class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [
         permissions.AllowAny
     ]
@@ -21,7 +21,7 @@ class RedditorViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class TradeViewSet(viewsets.ModelViewSet):
+class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [
         permissions.AllowAny
     ]
