@@ -1,6 +1,6 @@
 node_modules
 venv
-static/frontend/
+confirmedtrades/frontend/static/frontend
 
 # Created by https://www.gitignore.io/api/django
 # Edit at https://www.gitignore.io/?templates=django
