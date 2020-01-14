@@ -24,11 +24,11 @@ export class Trades extends Component {
       },
       {
         label: 'First User',
-        field: 'user1'
+        field: 'username1'
       },
       {
         label: 'Second User',
-        field: 'user2'
+        field: 'username2'
       },
       {
         label: 'Comment URL',

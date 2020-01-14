@@ -9,6 +9,9 @@ class RedditorSerializer(serializers.ModelSerializer):
 
 
 class TradeSerializer(serializers.ModelSerializer):
+    username1 = serializers.ReadOnlyField(source='user1.username')
+    username2 = serializers.ReadOnlyField(source='user2.username')
+
     class Meta:
         model = Trade
-        fields = '__all__'
+        fields = ('id', 'username1', 'username2', 'comment_id', 'comment_url', 'confirmation_datetime')
