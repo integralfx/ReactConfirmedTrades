@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import { GET_REDDITORS, GET_TRADES } from "./types";
+import { GET_REDDITORS, GET_TRADES, GET_REDDITOR_TRADES } from "./types";
 
-export const getRedditors = (onSuccess=null) => dispatch => {
+export const getRedditors = (onSuccess = null) => dispatch => {
   axios
     .get("/api/redditors/")
     .then(res => {
@@ -10,7 +10,7 @@ export const getRedditors = (onSuccess=null) => dispatch => {
         type: GET_REDDITORS,
         payload: res.data
       });
-      onSuccess();
+      if (onSuccess) onSuccess();
     })
     .catch(err => console.log(err));
 };
@@ -26,3 +26,16 @@ export const getTrades = () => dispatch => {
     })
     .catch(err => console.log(err));
 };
+
+export const getRedditorTrades = (username, onSuccess = null) => dispatch => {
+  axios
+    .get(`/api/redditors/${username}/trades`)
+    .then(res => {
+      dispatch({
+        type: GET_REDDITOR_TRADES,
+        payload: res.data
+      });
+      if (onSuccess) onSuccess();
+    })
+    .catch(err => console.log(err));
+}

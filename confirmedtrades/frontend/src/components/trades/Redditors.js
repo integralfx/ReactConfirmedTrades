@@ -5,6 +5,7 @@ import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
 
 import { getRedditors } from "../../actions/trades";
 import Pagination from "../layout/Pagination";
+import { Link } from "react-router-dom";
 
 export class Redditors extends Component {
   static propTypes = {
@@ -16,6 +17,7 @@ export class Redditors extends Component {
     super(props);
 
     this.state = {
+      isLoading: true,
       pageSize: 20,
       redditors: []
     }
@@ -25,7 +27,8 @@ export class Redditors extends Component {
     this.props.getRedditors(() => { 
       this.setState({
         ...this.state,
-        redditors: this.props.redditors.slice(0, this.state.pageSize)
+        redditors: this.props.redditors.slice(0, this.state.pageSize),
+        isLoading: false
       });
     });
   }
@@ -40,12 +43,30 @@ export class Redditors extends Component {
   };
 
   render() {
+    if (this.state.isLoading) {
+      return (
+        <div className="text-center">
+          <div className="spinner-border" style={{ width: "5rem", height: "5rem" }} role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      );
+    }
+
+    const linkStyle = {
+      color: "#007bff"
+    };
+
     let rows = [];
     for (const redditor of this.state.redditors) {
       rows.push(
         <tr key={redditor.id}>
           <td>{redditor.id}</td>
-          <td>{redditor.username}</td>
+          <td>
+            <Link to={`/redditors/${redditor.username}`} style={linkStyle}>
+              {redditor.username}
+            </Link>
+          </td>
         </tr>
       );
     }

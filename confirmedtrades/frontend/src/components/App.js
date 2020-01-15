@@ -11,6 +11,7 @@ import store from "../store";
 import Header from "./layout/Header";
 import Redditors from "./trades/Redditors";
 import Trades from './trades/Trades';
+import RedditorTrades from './trades/RedditorTrades';
 
 class App extends Component {
   render() {
@@ -24,6 +25,9 @@ class App extends Component {
                 <Route exact path="/">
                   <Redditors />
                 </Route>
+
+                <Route exact path="/redditors/:username" component={RedditorTrades} />
+
                 <Route exact path="/trades">
                   <Trades />
                 </Route>

@@ -1,8 +1,9 @@
-import { GET_REDDITORS, GET_TRADES } from "../actions/types";
+import { GET_REDDITORS, GET_TRADES, GET_REDDITOR_TRADES } from "../actions/types";
 
 const initialState = {
   redditors: [],
-  trades: []
+  trades: [],
+  redditorTrades: []
 };
 
 export default function(state = initialState, action) {
@@ -17,8 +18,14 @@ export default function(state = initialState, action) {
       return {
         ...state,
         trades: action.payload
-      }
+      };
     
+    case GET_REDDITOR_TRADES:
+      return {
+        ...state,
+        redditorTrades: action.payload
+      };
+
     default:
       return state;
   }
