@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import moment from 'moment';
 
 import Pagination from '../layout/Pagination';
+import SortableTableHeadings from '../layout/SortableTableHeadings';
 
 export class RedditorTrades extends Component {
   static propTypes = {
@@ -118,28 +119,23 @@ export class RedditorTrades extends Component {
     });
   };
 
-  sortColumn = (index) => {
-    let sortColOrder = 'asc';
-    if (index === this.state.sortCol) {
-      sortColOrder = this.state.sortColOrder === 'asc' ? 'desc' : 'asc';
-    }
-
+  onSortHeading = (index, order) => {
     this.setState({
       ...this.state,
       sortCol: index,
-      sortColOrder
-    }, 
+      sortColOrder: order
+    },
     () => {
       const start = (this.state.pageNo - 1) * this.state.pageSize,
             end = this.state.pageNo * this.state.pageSize,
             trades = this.getSortedUserTrades().slice(start, end);
-      
+
       this.setState({
         ...this.state,
         trades
       });
     });
-  };
+  }
 
   render() {
     if (this.state.isLoading) {
@@ -195,27 +191,6 @@ export class RedditorTrades extends Component {
         style: { width: '33%' }
       },
     ];
-    let tableHeadings = [];
-    for (let i = 0; i < headings.length; i++) {
-      const h = headings[i];
-      let sortIcon = '';
-      if (i === this.state.sortCol) {
-        sortIcon = (
-          <MDBIcon 
-            icon={this.state.sortColOrder === 'asc' ? 'caret-up' : 'caret-down'}
-            className="ml-2" />
-        );
-      }
-
-      tableHeadings.push(
-        <th key={i} style={h.style}>
-          <a href="#" onClick={e => { e.preventDefault(); this.sortColumn(i); }}>
-            {h.text}
-            {sortIcon}
-          </a>
-        </th>
-      )
-    }
 
     const userTrades = this.getSortedUserTrades();
     const numPages = Math.ceil(userTrades.length / this.state.pageSize);
@@ -242,9 +217,9 @@ export class RedditorTrades extends Component {
 
         <MDBTable bordered hover>
           <MDBTableHead>
-            <tr>
-              {tableHeadings}
-            </tr>
+            <SortableTableHeadings
+              headings={headings}
+              onSortHeading={this.onSortHeading} />
           </MDBTableHead>
           <MDBTableBody>
             {rows}
