@@ -8,14 +8,18 @@ export const getRedditors = (onSuccess = null) => dispatch => {
     .then(res => {
       dispatch({
         type: GET_REDDITORS,
-        payload: res.data
+        payload: res.data.sort((a, b) => {
+          if (a.username < b.username) return -1;
+          if (a.username > b.username) return 1;
+          return 0;
+        })
       });
       if (onSuccess) onSuccess();
     })
     .catch(err => console.log(err));
 };
 
-export const getTrades = () => dispatch => {
+export const getTrades = (onSuccess = null) => dispatch => {
   axios
     .get("/api/trades/")
     .then(res => {
@@ -23,6 +27,7 @@ export const getTrades = () => dispatch => {
         type: GET_TRADES,
         payload: res.data
       });
+      if (onSuccess) onSuccess();
     })
     .catch(err => console.log(err));
 };
