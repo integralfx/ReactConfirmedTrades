@@ -4,15 +4,13 @@ import PropTypes from 'prop-types'
 import { MDBTable, MDBTableHead, MDBTableBody } from 'mdbreact';
 import moment from 'moment';
 
-import { getTrades, getRedditors } from '../../actions/trades';
 import Pagination from '../layout/Pagination';
 import { Link } from 'react-router-dom';
 
 export class Trades extends Component {
   static propTypes = {
-    trades: PropTypes.array.isRequired,
-    getTrades: PropTypes.func.isRequired,
-    getRedditors: PropTypes.func.isRequired,
+    redditors: PropTypes.array.isRequired,
+    trades: PropTypes.array.isRequired
   };
 
   constructor(props) {
@@ -26,16 +24,6 @@ export class Trades extends Component {
   }
 
   componentDidMount() {
-    // this.props.getTrades(() => {
-    //   this.props.getRedditors(() => {
-    //     this.setState({
-    //       ...this.state,
-    //       isLoading: false,
-    //       trades: this.props.trades.slice(0, this.state.pageSize)
-    //     });
-    //   });
-    // });
-
     this.setState({
       ...this.state,
       isLoading: false,
@@ -127,4 +115,4 @@ const mapStateToProps = state => ({
   redditors: state.trades.redditors
 });
 
-export default connect(mapStateToProps, { getTrades, getRedditors })(Trades);
+export default connect(mapStateToProps)(Trades);
