@@ -99,6 +99,7 @@ export class Redditors extends Component {
 
         <Pagination 
           numPages={numPages}
+          pageRange={5}
           onPageChange={this.onPageChange} />
       </Fragment>
     );

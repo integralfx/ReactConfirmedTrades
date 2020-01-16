@@ -15,23 +15,24 @@ export default class Pagination extends Component {
     this.setState({
       ...this.state,
       pageNo
-    });
-    this.props.onPageChange(pageNo);
+    }, () => this.props.onPageChange(pageNo));
   };
 
   render() {
-    let pageItems = [];
+    const { pageNo } = this.state;
+    const { numPages, pageRange } = this.props;
 
-    const nums = [this.state.pageNo - 1, this.state.pageNo, this.state.pageNo + 1];
+    const nums = [...Array(pageRange).keys()].map(n => n + pageNo - Math.floor(pageRange / 2));
     if (nums[0] < 1) {
       const diff = 1 - nums[0];
       nums.forEach((n, i, a) => a[i] += diff);
     }
-    else if (nums[2] > this.props.numPages) {
-      const diff = nums[2] - this.props.numPages;
+    else if (nums[2] > numPages && pageNo > pageRange) {
+      const diff = nums[2] - numPages;
       nums.forEach((n, i, a) => a[i] -= diff);
     }
-    
+
+    let pageItems = [];
     for (const n of nums) {
       pageItems.push(
         <MDBPageItem 

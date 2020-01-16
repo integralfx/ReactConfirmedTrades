@@ -4,7 +4,8 @@ import PropTypes from 'prop-types'
 import { 
   MDBTable, MDBTableHead, MDBTableBody, 
   MDBCard, MDBCardBody, MDBCardTitle,
-  MDBListGroup, MDBListGroupItem
+  MDBListGroup, MDBListGroupItem,
+  MDBIcon
 } from 'mdbreact';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
@@ -24,7 +25,10 @@ export class RedditorTrades extends Component {
       pageSize: 20,
       isLoading: true,
       username: '',
-      trades: []
+      trades: [],
+      sortCol: 0,           // index of column to sort
+      sortColOrder: 'asc',
+      pageNo: 1
     };
   }
 
@@ -40,10 +44,59 @@ export class RedditorTrades extends Component {
     }
   }
 
-  getUserTrades(username = null) {
+  getSortedUserTrades(username = null) {
     if (!username) username = this.state.username;
     const userID = this.props.redditors.find(r => r.username === username).id;
-    return this.props.allTrades.filter(t => t.user1 === userID);
+    let trades = this.props.allTrades
+      .filter(t => t.user1 === userID)
+      .map(t => { 
+        return { 
+          ...t, 
+          username2: this.props.redditors.find(r => r.id === t.user2).username 
+        };
+      });
+
+    const { sortCol, sortColOrder } = this.state;
+
+    switch (sortCol) {
+      // Username
+      case 0:
+        trades = trades.sort((a, b) => {
+          if (a.username2 < b.username2) {
+            return sortColOrder === 'asc' ? -1 : 1;
+          }
+          if (a.username2 > b.username2) {
+            return sortColOrder === 'asc' ? 1 : -1;
+          }
+          return 0;
+        });
+        break;
+      
+      // Comment ID
+      case 1:
+        trades = trades.sort((a, b) => {
+          if (a.comment_id < b.comment_id) {
+            return sortColOrder === 'asc' ? -1 : 1;
+          }
+          if (a.comment_id > b.comment_id) {
+            return sortColOrder === 'asc' ? 1 : -1;
+          }
+          return 0;
+        });
+        break;
+      
+      // Date & Time
+      case 2:
+        trades = trades.sort((a, b) => {
+          if (this.state.sortColOrder === 'asc') {
+            return Date.parse(a.confirmation_datetime) - Date.parse(b.confirmation_datetime);
+          }
+          return Date.parse(b.confirmation_datetime) - Date.parse(a.confirmation_datetime);
+        });
+        break;
+    }
+
+    return trades;
   }
 
   updateTrades = (username) => {
@@ -51,18 +104,42 @@ export class RedditorTrades extends Component {
       ...this.state,
       isLoading: false,
       username,
-      trades: this.getUserTrades(username).slice(0, this.state.pageSize)
+      trades: this.getSortedUserTrades(username).slice(0, this.state.pageSize)
     });
-  } 
+  };
 
   onPageChange = (pageNo) => {
     const start = (pageNo - 1) * this.state.pageSize,
           end = pageNo * this.state.pageSize;
     this.setState({
       ...this.state,
-      trades: this.getUserTrades().slice(start, end)
+      trades: this.getSortedUserTrades().slice(start, end),
+      pageNo
     });
-  }
+  };
+
+  sortColumn = (index) => {
+    let sortColOrder = 'asc';
+    if (index === this.state.sortCol) {
+      sortColOrder = this.state.sortColOrder === 'asc' ? 'desc' : 'asc';
+    }
+
+    this.setState({
+      ...this.state,
+      sortCol: index,
+      sortColOrder
+    }, 
+    () => {
+      const start = (this.state.pageNo - 1) * this.state.pageSize,
+            end = this.state.pageNo * this.state.pageSize,
+            trades = this.getSortedUserTrades().slice(start, end);
+      
+      this.setState({
+        ...this.state,
+        trades
+      });
+    });
+  };
 
   render() {
     if (this.state.isLoading) {
@@ -86,13 +163,12 @@ export class RedditorTrades extends Component {
 
     let rows = [];
     for (const trade of this.state.trades) {
-      const user = this.props.redditors.find(r => r.id === trade.user2).username
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
           <td>
-            <Link to={`/redditors/${user}`} style={linkStyle}>
-              {user}
+            <Link to={`/redditors/${trade.username2}`} style={linkStyle}>
+              {trade.username2}
             </Link>
           </td>
           <td>
@@ -105,7 +181,43 @@ export class RedditorTrades extends Component {
       );
     }
     
-    const userTrades = this.getUserTrades();
+    const headings = [
+      {
+        text: 'User',
+        style: { width: '33%' }
+      },
+      {
+        text: 'Confirmation',
+        style: { width: '33%' }
+      },
+      {
+        text: 'Date & Time',
+        style: { width: '33%' }
+      },
+    ];
+    let tableHeadings = [];
+    for (let i = 0; i < headings.length; i++) {
+      const h = headings[i];
+      let sortIcon = '';
+      if (i === this.state.sortCol) {
+        sortIcon = (
+          <MDBIcon 
+            icon={this.state.sortColOrder === 'asc' ? 'caret-up' : 'caret-down'}
+            className="ml-2" />
+        );
+      }
+
+      tableHeadings.push(
+        <th key={i} style={h.style}>
+          <a href="#" onClick={e => { e.preventDefault(); this.sortColumn(i); }}>
+            {h.text}
+            {sortIcon}
+          </a>
+        </th>
+      )
+    }
+
+    const userTrades = this.getSortedUserTrades();
     const numPages = Math.ceil(userTrades.length / this.state.pageSize);
 
     return (
@@ -131,9 +243,7 @@ export class RedditorTrades extends Component {
         <MDBTable bordered hover>
           <MDBTableHead>
             <tr>
-              <th style={{ width: "33%" }}>User</th>
-              <th style={{ width: "33%" }}>Confirmation</th>
-              <th style={{ width: "33%" }}>Date & Time</th>
+              {tableHeadings}
             </tr>
           </MDBTableHead>
           <MDBTableBody>
@@ -143,6 +253,7 @@ export class RedditorTrades extends Component {
 
         <Pagination
           numPages={numPages}
+          pageRange={3}
           onPageChange={this.onPageChange} />
       </Fragment>
     );
