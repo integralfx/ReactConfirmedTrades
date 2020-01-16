@@ -7,14 +7,15 @@ import {
   MDBListGroup, MDBListGroupItem
 } from 'mdbreact';
 
-import { getRedditorTrades } from '../../actions/trades';
+import { getRedditorTrades, getRedditors } from '../../actions/trades';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
 export class RedditorTrades extends Component {
   static propTypes = {
     trades: PropTypes.array.isRequired,
-    getRedditorTrades: PropTypes.func.isRequired
+    getRedditorTrades: PropTypes.func.isRequired,
+    getRedditors: PropTypes.func.isRequired,
   };
 
   constructor(props) {
@@ -30,11 +31,13 @@ export class RedditorTrades extends Component {
     const username = this.props.match.params.username;
     this.props.getRedditorTrades(
       username,
-      () => this.setState({ 
-        ...this.state, 
-        isLoading: false,
-        username
-      })
+      () => {
+        this.setState({ 
+          ...this.state, 
+          isLoading: false,
+          username
+        });
+      }
     );
   }
 
@@ -60,13 +63,13 @@ export class RedditorTrades extends Component {
 
     let rows = [];
     for (const trade of this.props.trades) {
+      const user = this.props.redditors.find(r => r.id === trade.user2).username
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
-          <td>{trade.id}</td>
           <td>
-            <Link to={`/redditors/${trade.username2}/trades`} style={linkStyle}>
-              {trade.username2}
+            <Link to={`/redditors/${user}`} style={linkStyle}>
+              {user}
             </Link>
           </td>
           <td>
@@ -102,10 +105,9 @@ export class RedditorTrades extends Component {
         <MDBTable bordered hover>
           <MDBTableHead>
             <tr>
-              <th style={{ width: "10%" }}>ID</th>
-              <th style={{ width: "20%" }}>User</th>
-              <th style={{ width: "30%" }}>Confirmation</th>
-              <th style={{ width: "40%" }}>Date & Time</th>
+              <th style={{ width: "33%" }}>User</th>
+              <th style={{ width: "33%" }}>Confirmation</th>
+              <th style={{ width: "33%" }}>Date & Time</th>
             </tr>
           </MDBTableHead>
           <MDBTableBody>
@@ -118,7 +120,8 @@ export class RedditorTrades extends Component {
 }
 
 const mapStateToProps = state => ({
-  trades: state.trades.redditorTrades
+  trades: state.trades.redditorTrades,
+  redditors: state.trades.redditors
 });
 
-export default connect(mapStateToProps, { getRedditorTrades })(RedditorTrades);
+export default connect(mapStateToProps, { getRedditorTrades, getRedditors })(RedditorTrades);

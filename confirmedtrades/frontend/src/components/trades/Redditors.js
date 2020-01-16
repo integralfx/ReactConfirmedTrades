@@ -24,12 +24,18 @@ export class Redditors extends Component {
   }
 
   componentDidMount() {
-    this.props.getRedditors(() => { 
-      this.setState({
-        ...this.state,
-        redditors: this.props.redditors.slice(0, this.state.pageSize),
-        isLoading: false
-      });
+    // this.props.getRedditors(() => { 
+    //   this.setState({
+    //     ...this.state,
+    //     redditors: this.props.redditors.slice(0, this.state.pageSize),
+    //     isLoading: false
+    //   });
+    // });
+
+    this.setState({
+      ...this.state,
+      redditors: this.props.redditors.slice(0, this.state.pageSize),
+      isLoading: false
     });
   }
 
@@ -61,7 +67,6 @@ export class Redditors extends Component {
     for (const redditor of this.state.redditors) {
       rows.push(
         <tr key={redditor.id}>
-          <td>{redditor.id}</td>
           <td>
             <Link to={`/redditors/${redditor.username}`} style={linkStyle}>
               {redditor.username}
@@ -75,11 +80,10 @@ export class Redditors extends Component {
 
     return (
       <Fragment>
-        <MDBTable striped bordered hover>
+        <MDBTable bordered hover>
           <MDBTableHead>
             <tr>
-              <th style={{ width: "20%" }}>ID</th>
-              <th style={{ width: "80%" }}>Username</th>
+              <th style={{ width: "100%" }}>Username</th>
             </tr>
           </MDBTableHead>
           <MDBTableBody>

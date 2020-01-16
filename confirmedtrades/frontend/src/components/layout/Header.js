@@ -6,9 +6,9 @@ export default class Header extends Component {
     return (
       <nav className="navbar navbar-expand-sm navbar-dark bg-dark mb-4">
         <div className="container">
-          <a className="navbar-brand" href="/">
+          <Link to="/" className="navbar-brand">
             Confirmed Trades
-          </a>
+          </Link>
 
           <div className="collapse navbar-collapse">
             <ul className="navbar-nav mr-auto">
