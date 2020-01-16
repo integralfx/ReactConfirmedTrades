@@ -6,6 +6,7 @@ from .models import Redditor, Trade
 from .serializers import RedditorSerializer, TradeSerializer
 
 
+# TODO: Paginate.
 class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [
         permissions.AllowAny
