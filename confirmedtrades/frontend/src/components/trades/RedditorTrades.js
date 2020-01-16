@@ -3,19 +3,19 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types'
 import { 
   MDBTable, MDBTableHead, MDBTableBody, 
-  MDBCard, MDBCardBody, MDBCardTitle, MDBCardText,
+  MDBCard, MDBCardBody, MDBCardTitle,
   MDBListGroup, MDBListGroupItem
 } from 'mdbreact';
-
-import { getRedditorTrades, getRedditors } from '../../actions/trades';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
+import { getRedditorTrades } from '../../actions/trades';
+
 export class RedditorTrades extends Component {
   static propTypes = {
+    redditors: PropTypes.array.isRequired,
     trades: PropTypes.array.isRequired,
-    getRedditorTrades: PropTypes.func.isRequired,
-    getRedditors: PropTypes.func.isRequired,
+    getRedditorTrades: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -28,18 +28,30 @@ export class RedditorTrades extends Component {
   }
 
   componentDidMount() {
-    const username = this.props.match.params.username;
-    this.props.getRedditorTrades(
-      username,
-      () => {
-        this.setState({ 
-          ...this.state, 
-          isLoading: false,
-          username
-        });
-      }
-    );
+    this.updateTrades(this.props.match.params.username);
   }
+
+  componentDidUpdate(prevProps) {
+    const prevUsername = prevProps.match.params.username,
+          currUsername = this.props.match.params.username;
+    if (prevUsername !== currUsername) {
+      this.updateTrades(currUsername);
+    }
+  }
+
+  updateTrades = (username) => {
+    this.setState({
+      ...this.setState,
+      isLoading: true
+    });
+    this.props.getRedditorTrades(username, () => {
+      this.setState({ 
+        ...this.state, 
+        isLoading: false,
+        username
+      });
+    });
+  } 
 
   render() {
     if (this.state.isLoading) {
@@ -124,4 +136,4 @@ const mapStateToProps = state => ({
   redditors: state.trades.redditors
 });
 
-export default connect(mapStateToProps, { getRedditorTrades, getRedditors })(RedditorTrades);
+export default connect(mapStateToProps, { getRedditorTrades })(RedditorTrades);
