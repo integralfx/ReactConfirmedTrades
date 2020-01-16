@@ -9,21 +9,22 @@ import {
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
-import { getRedditorTrades } from '../../actions/trades';
+import Pagination from '../layout/Pagination';
 
 export class RedditorTrades extends Component {
   static propTypes = {
     redditors: PropTypes.array.isRequired,
-    trades: PropTypes.array.isRequired,
-    getRedditorTrades: PropTypes.func.isRequired
+    allTrades: PropTypes.array.isRequired,
   };
 
   constructor(props) {
     super(props);
 
     this.state = {
+      pageSize: 20,
       isLoading: true,
-      username: ''
+      username: '',
+      trades: []
     };
   }
 
@@ -39,19 +40,29 @@ export class RedditorTrades extends Component {
     }
   }
 
+  getUserTrades(username = null) {
+    if (!username) username = this.state.username;
+    const userID = this.props.redditors.find(r => r.username === username).id;
+    return this.props.allTrades.filter(t => t.user1 === userID);
+  }
+
   updateTrades = (username) => {
     this.setState({
-      ...this.setState,
-      isLoading: true
-    });
-    this.props.getRedditorTrades(username, () => {
-      this.setState({ 
-        ...this.state, 
-        isLoading: false,
-        username
-      });
+      ...this.state,
+      isLoading: false,
+      username,
+      trades: this.getUserTrades(username).slice(0, this.state.pageSize)
     });
   } 
+
+  onPageChange = (pageNo) => {
+    const start = (pageNo - 1) * this.state.pageSize,
+          end = pageNo * this.state.pageSize;
+    this.setState({
+      ...this.state,
+      trades: this.getUserTrades().slice(start, end)
+    });
+  }
 
   render() {
     if (this.state.isLoading) {
@@ -74,7 +85,7 @@ export class RedditorTrades extends Component {
     };
 
     let rows = [];
-    for (const trade of this.props.trades) {
+    for (const trade of this.state.trades) {
       const user = this.props.redditors.find(r => r.id === trade.user2).username
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
@@ -93,6 +104,9 @@ export class RedditorTrades extends Component {
         </tr>
       );
     }
+    
+    const userTrades = this.getUserTrades();
+    const numPages = Math.ceil(userTrades.length / this.state.pageSize);
 
     return (
       <Fragment>
@@ -108,7 +122,7 @@ export class RedditorTrades extends Component {
               </MDBListGroupItem>
 
               <MDBListGroupItem>
-                {this.props.trades.length} confirmed trade{this.props.trades.length > 1 ? 's' : ''}
+                {userTrades.length} confirmed trade{userTrades.length > 1 ? 's' : ''}
               </MDBListGroupItem>
             </MDBListGroup>
           </MDBCardBody>
@@ -126,14 +140,18 @@ export class RedditorTrades extends Component {
             {rows}
           </MDBTableBody>
         </MDBTable>
+
+        <Pagination
+          numPages={numPages}
+          onPageChange={this.onPageChange} />
       </Fragment>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  trades: state.trades.redditorTrades,
+  allTrades: state.trades.trades,
   redditors: state.trades.redditors
 });
 
-export default connect(mapStateToProps, { getRedditorTrades })(RedditorTrades);
+export default connect(mapStateToProps)(RedditorTrades);
