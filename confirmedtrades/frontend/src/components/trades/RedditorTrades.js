@@ -10,13 +10,13 @@ import {
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
+import { getRedditorTrades } from '../../actions/trades';
 import Pagination from '../layout/Pagination';
 import SortableTableHeadings from '../layout/SortableTableHeadings';
 
 export class RedditorTrades extends Component {
   static propTypes = {
-    redditors: PropTypes.array.isRequired,
-    allTrades: PropTypes.array.isRequired,
+    trades: PropTypes.array.isRequired,
   };
 
   constructor(props) {
@@ -34,7 +34,15 @@ export class RedditorTrades extends Component {
   }
 
   componentDidMount() {
-    this.updateTrades(this.props.match.params.username);
+    const { username } = this.props.match.params;
+    this.props.getRedditorTrades(username, () => {
+      this.setState({
+        ...this.state,
+        trades: this.props.trades.slice(0, this.state.pageSize),
+        isLoading: false,
+        username
+      });
+    });
   }
 
   componentDidUpdate(prevProps) {
@@ -114,27 +122,13 @@ export class RedditorTrades extends Component {
           end = pageNo * this.state.pageSize;
     this.setState({
       ...this.state,
-      trades: this.getSortedUserTrades().slice(start, end),
+      trades: this.props.trades.slice(start, end),
       pageNo
     });
   };
 
   onSortHeading = (index, order) => {
-    this.setState({
-      ...this.state,
-      sortCol: index,
-      sortColOrder: order
-    },
-    () => {
-      const start = (this.state.pageNo - 1) * this.state.pageSize,
-            end = this.state.pageNo * this.state.pageSize,
-            trades = this.getSortedUserTrades().slice(start, end);
-
-      this.setState({
-        ...this.state,
-        trades
-      });
-    });
+    
   }
 
   render() {
@@ -192,8 +186,7 @@ export class RedditorTrades extends Component {
       },
     ];
 
-    const userTrades = this.getSortedUserTrades();
-    const numPages = Math.ceil(userTrades.length / this.state.pageSize);
+    const numPages = Math.ceil(this.props.trades.length / this.state.pageSize);
 
     return (
       <Fragment>
@@ -209,7 +202,7 @@ export class RedditorTrades extends Component {
               </MDBListGroupItem>
 
               <MDBListGroupItem>
-                {userTrades.length} confirmed trade{userTrades.length > 1 ? 's' : ''}
+                {this.state.trades.length} confirmed trade{this.state.trades.length > 1 ? 's' : ''}
               </MDBListGroupItem>
             </MDBListGroup>
           </MDBCardBody>
@@ -236,8 +229,7 @@ export class RedditorTrades extends Component {
 }
 
 const mapStateToProps = state => ({
-  allTrades: state.trades.trades,
-  redditors: state.trades.redditors
+  trades: state.trades.redditorTrades,
 });
 
-export default connect(mapStateToProps)(RedditorTrades);
+export default connect(mapStateToProps, { getRedditorTrades })(RedditorTrades);

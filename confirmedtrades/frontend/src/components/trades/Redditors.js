@@ -5,14 +5,18 @@ import PropTypes from "prop-types";
 import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
 import moment from 'moment';
 
+import { getRedditors } from '../../actions/trades';
 import Pagination from "../layout/Pagination";
 import SortableTableHeadings from '../layout/SortableTableHeadings';
 
 export class Redditors extends Component {
+  /*
   static propTypes = {
+    count: PropTypes.number.isRequired,
     redditors: PropTypes.array.isRequired,
     trades: PropTypes.array.isRequired
   };
+  */
 
   constructor(props) {
     super(props);
@@ -21,31 +25,45 @@ export class Redditors extends Component {
       isLoading: true,
       pageSize: 20,
       pageNo: 1,
-      sortedRedditors: [],
-      redditors: []
+      sort: 'username'
     };
   }
 
-  componentDidMount() {
-    const sortedRedditors = this.getSortedRedditors();
+  updateRedditors = (pageNo = this.state.pageNo, sort = this.state.sort) => {
+    /*
     this.setState({
       ...this.state,
-      sortedRedditors,
-      redditors: sortedRedditors.slice(0, this.state.pageSize),
-      isLoading: false
+      isLoading: true
     });
+    //*/
+
+    const queryData = { 
+      page: pageNo, 
+      page_size: this.state.pageSize,
+      sort
+    };
+    this.props.getRedditors(queryData, () => {
+      this.setState({
+        ...this.state,
+        isLoading: false,
+        pageNo,
+        sort
+      });
+    });
+  }
+
+  componentDidMount() {
+    this.updateRedditors();
   }
 
   getSortedRedditors(index = 0, order = 'asc') {
     let redditors = this.props.redditors.map(r => {
-      const trades = this.props.trades.filter(t => t.user1 === r.id),
-            lastTrade = trades.sort((a, b) =>
-              Date.parse(b.confirmation_datetime) - Date.parse(a.confirmation_datetime)
-            )[0];
+      const lastTrade = r.trades1.sort((a, b) => 
+        Date.parse(b.confirmation_datetime) - Date.parse(a.confirmation_datetime)
+      )[0];
 
       return {
         ...r,
-        trades,
         lastTrade
       };
     });
@@ -54,23 +72,25 @@ export class Redditors extends Component {
       // Username
       case 0:
         redditors = redditors.sort((a, b) => {
-          return order === 'asc' ? a.username.localeCompare(b.username) : 
-                                   b.username.localeCompare(a.username);
+          const u1 = a.username, u2 = b.username;
+          return order === 'asc' ? u1.localeCompare(u2) : u2.localeCompare(u1);
         });
         break;
 
       // Trades
       case 1:
-        redditors = redditors.sort((a, b) => a.trades.length - b.trades.length);
+        redditors = redditors.sort((a, b) => 
+          order === 'asc' ? a.trades1.length - b.trades1.length
+                          : b.trades1.length - a.trades1.length
+        );
         break;
 
       // Last Trade
       case 2:
-        trades = trades.sort((a, b) => {
-          if (order === 'asc') {
-            return Date.parse(a.lastTrade.confirmation_datetime) - Date.parse(b.lastTrade.confirmation_datetime);
-          }
-          return Date.parse(b.lastTrade.confirmation_datetime) - Date.parse(a.lastTrade.confirmation_datetime);
+        redditors = redditors.sort((a, b) => {
+          const d1 = Date.parse(a.lastTrade.confirmation_datetime),
+                d2 = Date.parse(b.lastTrade.confirmation_datetime);
+          return order === 'asc' ? d1 - d2 : d2 - d1;
         });
         break;
     }
@@ -79,53 +99,26 @@ export class Redditors extends Component {
   }
 
   onPageChange = (pageNo) => {
-    const start = (pageNo - 1) * this.state.pageSize, 
-          end = pageNo * this.state.pageSize;
-
-    this.setState({
-      ...this.state,
-      pageNo,
-      redditors: this.state.sortedRedditors.slice(start, end)
-    });
+    this.updateRedditors(pageNo);
   };
 
   onSortHeading = (index, order) => {
-    const start = (this.state.pageNo - 1) * this.state.pageSize, 
-          end = this.state.pageNo * this.state.pageSize;
-
-    let sortedRedditors = this.state.sortedRedditors;
     switch (index) {
       // Username
       case 0:
-        sortedRedditors = sortedRedditors.sort((a, b) => {
-          const u1 = a.username, u2 = b.username;
-          return order === 'asc' ? u1.localeCompare(u2) : u2.localeCompare(u1);
-        });
+        this.updateRedditors(this.state.pageNo, order === 'asc' ? 'username' : '-username');
         break;
 
       // Trades
       case 1:
-        sortedRedditors = sortedRedditors.sort((a, b) => 
-          order === 'asc' ? a.trades.length - b.trades.length
-                          : b.trades.length - a.trades.length
-        );
+        this.updateRedditors(this.state.pageNo, order === 'asc' ? 'trades' : '-trades');
         break;
 
       // Last Trade
       case 2:
-        sortedRedditors = sortedRedditors.sort((a, b) => {
-          const d1 = Date.parse(a.lastTrade.confirmation_datetime),
-                d2 = Date.parse(b.lastTrade.confirmation_datetime);
-          return order === 'asc' ? d1 - d2 : d2 - d1;
-        });
+        this.updateRedditors(this.state.pageNo, order === 'asc' ? 'last_trade' : '-last_trade');
         break;
     }
-
-    this.setState({
-      ...this.state,
-      sortedRedditors,
-      redditors: sortedRedditors.slice(start, end)
-    });
   }
 
   render() {
@@ -144,8 +137,14 @@ export class Redditors extends Component {
     };
 
     let rows = [];
-    for (const redditor of this.state.redditors) {
-      const date = moment(Date.parse(redditor.lastTrade.confirmation_datetime));
+    for (const redditor of this.props.redditors) {
+      const lastTrade = redditor.trades1.sort((a, b) => {
+        const d1 = Date.parse(a.confirmation_datetime),
+              d2 = Date.parse(b.confirmation_datetime);
+        return d2 - d1;
+      })[0];
+      const date = moment(Date.parse(lastTrade.confirmation_datetime));
+
       rows.push(
         <tr key={redditor.id}>
           <td>
@@ -154,16 +153,16 @@ export class Redditors extends Component {
             </Link>
           </td>
 
-          <td>{redditor.trades.length}</td>
+          <td>{redditor.trades1.length}</td>
 
           <td>
-            <a href={redditor.lastTrade.comment_url}>{date.format('YYYY-MM-DD HH:mm:ss')}</a>
+            <a href={lastTrade.comment_url}>{date.format('YYYY-MM-DD HH:mm:ss')}</a>
           </td>
         </tr>
       );
     }
 
-    const numPages = Math.ceil(this.props.redditors.length / this.state.pageSize);
+    const numPages = Math.ceil(this.props.count / this.state.pageSize);
     const headings = [
       {
         text: 'Username',
@@ -202,8 +201,9 @@ export class Redditors extends Component {
 }
 
 const mapStateToProps = state => ({
-  redditors: state.trades.redditors,
+  count: state.trades.redditors.count,
+  redditors: state.trades.redditors.redditors,
   trades: state.trades.trades
 });
 
-export default connect(mapStateToProps)(Redditors);
+export default connect(mapStateToProps, { getRedditors })(Redditors);
