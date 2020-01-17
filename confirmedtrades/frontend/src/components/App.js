@@ -17,10 +17,6 @@ import { getTrades, getRedditors } from '../actions/trades';
 
 class App extends Component {
   render() {
-    let content = (
-
-    );
-
     return (
       <Provider store={store}>
         <Router>

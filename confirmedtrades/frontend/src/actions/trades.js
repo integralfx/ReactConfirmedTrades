@@ -41,9 +41,11 @@ export const getTrades = (onSuccess = null) => dispatch => {
     .catch(err => console.log(err));
 };
 
-export const getRedditorTrades = (username, onSuccess = null) => dispatch => {
+export const getRedditorTrades = (username, queryData = null, onSuccess = null) => dispatch => {
+  const url = `/api/redditors/${username}?` + encodeQueryData(queryData);
+
   axios
-    .get(`/api/redditors/${username}/trades`)
+    .get(url)
     .then(res => {
       dispatch({
         type: GET_REDDITOR_TRADES,

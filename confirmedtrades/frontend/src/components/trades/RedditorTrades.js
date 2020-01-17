@@ -15,9 +15,11 @@ import Pagination from '../layout/Pagination';
 import SortableTableHeadings from '../layout/SortableTableHeadings';
 
 export class RedditorTrades extends Component {
+  /*
   static propTypes = {
     trades: PropTypes.array.isRequired,
   };
+  */
 
   constructor(props) {
     super(props);
@@ -26,109 +28,67 @@ export class RedditorTrades extends Component {
       pageSize: 20,
       isLoading: true,
       username: '',
-      trades: [],
-      sortCol: 0,           // index of column to sort
-      sortColOrder: 'asc',
-      pageNo: 1
+      pageNo: 1,
+      sort: 'username2'
     };
   }
 
   componentDidMount() {
     const { username } = this.props.match.params;
-    this.props.getRedditorTrades(username, () => {
-      this.setState({
-        ...this.state,
-        trades: this.props.trades.slice(0, this.state.pageSize),
-        isLoading: false,
-        username
-      });
-    });
+    this.updateTrades(username);
   }
 
   componentDidUpdate(prevProps) {
     const prevUsername = prevProps.match.params.username,
           currUsername = this.props.match.params.username;
     if (prevUsername !== currUsername) {
-      this.updateTrades(currUsername);
+      this.updateTrades(currUsername, 1);
     }
   }
 
-  getSortedUserTrades(username = null) {
-    if (!username) username = this.state.username;
-    const userID = this.props.redditors.find(r => r.username === username).id;
-    let trades = this.props.allTrades
-      .filter(t => t.user1 === userID)
-      .map(t => { 
-        return { 
-          ...t, 
-          username2: this.props.redditors.find(r => r.id === t.user2).username 
-        };
+  updateTrades = (username, pageNo = this.state.pageNo, sort = this.state.sort) => {
+    const queryData = { 
+      page: pageNo, 
+      page_size: this.state.pageSize,
+      sort
+    };
+    this.props.getRedditorTrades(username, queryData, () => {
+      this.setState({
+        ...this.state,
+        isLoading: false,
+        username,
+        pageNo,
+        sort
       });
-
-    const { sortCol, sortColOrder } = this.state;
-
-    switch (sortCol) {
-      // Username
-      case 0:
-        trades = trades.sort((a, b) => {
-          if (a.username2 < b.username2) {
-            return sortColOrder === 'asc' ? -1 : 1;
-          }
-          if (a.username2 > b.username2) {
-            return sortColOrder === 'asc' ? 1 : -1;
-          }
-          return 0;
-        });
-        break;
-      
-      // Comment ID
-      case 1:
-        trades = trades.sort((a, b) => {
-          if (a.comment_id < b.comment_id) {
-            return sortColOrder === 'asc' ? -1 : 1;
-          }
-          if (a.comment_id > b.comment_id) {
-            return sortColOrder === 'asc' ? 1 : -1;
-          }
-          return 0;
-        });
-        break;
-      
-      // Date & Time
-      case 2:
-        trades = trades.sort((a, b) => {
-          if (this.state.sortColOrder === 'asc') {
-            return Date.parse(a.confirmation_datetime) - Date.parse(b.confirmation_datetime);
-          }
-          return Date.parse(b.confirmation_datetime) - Date.parse(a.confirmation_datetime);
-        });
-        break;
-    }
-
-    return trades;
-  }
-
-  updateTrades = (username) => {
-    this.setState({
-      ...this.state,
-      isLoading: false,
-      username,
-      trades: this.getSortedUserTrades(username).slice(0, this.state.pageSize)
     });
   };
 
   onPageChange = (pageNo) => {
-    const start = (pageNo - 1) * this.state.pageSize,
-          end = pageNo * this.state.pageSize;
-    this.setState({
-      ...this.state,
-      trades: this.props.trades.slice(start, end),
-      pageNo
-    });
+    this.updateTrades(this.state.username, pageNo);
   };
 
   onSortHeading = (index, order) => {
-    
+    switch (index) {
+      // Username
+      case 0:
+        this.updateTrades(
+          this.state.username, 
+          this.state.pageNo,
+          order === 'asc' ? 'username2' : '-username2'
+        );
+        break;
+
+      // Comment ID, Date & Time
+      // Comment IDs seem to follow date & time
+      case 1:
+      case 2:
+        this.updateTrades(
+          this.state.username, 
+          this.state.pageNo,
+          order === 'asc' ? 'confirmation_datetime' : '-confirmation_datetime'
+        );
+        break;
+    }
   }
 
   render() {
@@ -152,7 +112,7 @@ export class RedditorTrades extends Component {
     };
 
     let rows = [];
-    for (const trade of this.state.trades) {
+    for (const trade of this.props.trades) {
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
@@ -186,7 +146,7 @@ export class RedditorTrades extends Component {
       },
     ];
 
-    const numPages = Math.ceil(this.props.trades.length / this.state.pageSize);
+    const numPages = Math.ceil(this.props.count / this.state.pageSize);
 
     return (
       <Fragment>
@@ -202,7 +162,7 @@ export class RedditorTrades extends Component {
               </MDBListGroupItem>
 
               <MDBListGroupItem>
-                {this.state.trades.length} confirmed trade{this.state.trades.length > 1 ? 's' : ''}
+                {this.props.count} confirmed trade{this.props.count > 1 ? 's' : ''}
               </MDBListGroupItem>
             </MDBListGroup>
           </MDBCardBody>
@@ -229,7 +189,8 @@ export class RedditorTrades extends Component {
 }
 
 const mapStateToProps = state => ({
-  trades: state.trades.redditorTrades,
+  count: state.trades.redditorTrades.count,
+  trades: state.trades.redditorTrades.trades
 });
 
 export default connect(mapStateToProps, { getRedditorTrades })(RedditorTrades);
