@@ -27,8 +27,8 @@ export default class Pagination extends Component {
       const diff = 1 - nums[0];
       nums.forEach((n, i, a) => a[i] += diff);
     }
-    else if (nums[2] > numPages && pageNo > pageRange) {
-      const diff = nums[2] - numPages;
+    else if (nums[pageRange - 1] > numPages && pageNo > pageRange) {
+      const diff = nums[pageRange - 1] - numPages;
       nums.forEach((n, i, a) => a[i] -= diff);
     }
 
