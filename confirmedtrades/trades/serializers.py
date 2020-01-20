@@ -3,6 +3,7 @@ from .models import Redditor, Trade
 
 
 class TradeSerializer(serializers.ModelSerializer):
+    username1 = serializers.CharField(source='user1.username')
     username2 = serializers.CharField(source='user2.username')
 
     class Meta:

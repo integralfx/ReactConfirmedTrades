@@ -1,50 +1,62 @@
-import React, { Component, Fragment } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types'
-import { MDBTable, MDBTableHead, MDBTableBody } from 'mdbreact';
-import moment from 'moment';
+import React, { Component, Fragment } from "react";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
+import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
+import moment from "moment";
 
-import Pagination from '../layout/Pagination';
-import { Link } from 'react-router-dom';
+import Pagination from "../layout/Pagination";
+import { Link } from "react-router-dom";
+import { getTrades } from "../../actions/trades";
 
 export class Trades extends Component {
+  /*
   static propTypes = {
-    redditors: PropTypes.array.isRequired,
     trades: PropTypes.array.isRequired
   };
+  */
 
   constructor(props) {
     super(props);
 
     this.state = {
       pageSize: 20,
+      pageNo: 1,
       isLoading: true,
-      trades: []
+      sort: "username1"
     };
   }
 
   componentDidMount() {
-    this.setState({
-      ...this.state,
-      isLoading: false,
-      trades: this.props.trades.slice(0, this.state.pageSize)
-    });
+    this.updateTrades();
   }
 
-  onPageChange = (pageNo) => {
-    const start = (pageNo - 1) * this.state.pageSize, 
-          end = pageNo * this.state.pageSize;
-    this.setState({
-      ...this.state,
-      trades: this.props.trades.slice(start, end)
+  updateTrades = (pageNo = this.state.pageNo, sort = this.state.sort) => {
+    const queryData = {
+      page_size: this.state.pageSize,
+      page: pageNo
+    };
+    this.props.getTrades(queryData, () => {
+      this.setState({
+        pageNo,
+        isLoading: false,
+        sort
+      });
     });
+  };
+
+  onPageChange = pageNo => {
+    this.updateTrades(pageNo);
   };
 
   render() {
     if (this.state.isLoading) {
       return (
         <div className="text-center">
-          <div className="spinner-border" style={{ width: "5rem", height: "5rem" }} role="status">
+          <div
+            className="spinner-border"
+            style={{ width: "5rem", height: "5rem" }}
+            role="status"
+          >
             <span className="sr-only">Loading...</span>
           </div>
         </div>
@@ -56,32 +68,36 @@ export class Trades extends Component {
     };
 
     let rows = [];
-    for (const trade of this.state.trades) {
+    for (const trade of this.props.trades) {
       const date = moment(Date.parse(trade.confirmation_datetime));
-      const user1 = this.props.redditors.find(r => r.id === trade.user1).username,
-            user2 = this.props.redditors.find(r => r.id === trade.user2).username;
       rows.push(
         <tr key={trade.id}>
           <td>{trade.id}</td>
 
           <td>
-            <Link to={`/redditors/${user1}`} style={linkStyle}>{user1}</Link>
+            <Link to={`/redditors/${trade.username1}`} style={linkStyle}>
+              {trade.username1}
+            </Link>
           </td>
 
           <td>
-            <Link to={`/redditors/${user2}`} style={linkStyle}>{user2}</Link>
+            <Link to={`/redditors/${trade.usernam2}`} style={linkStyle}>
+              {trade.username2}
+            </Link>
           </td>
 
           <td>
-            <a href={trade.comment_url} style={linkStyle}>{trade.comment_id}</a>
+            <a href={trade.comment_url} style={linkStyle}>
+              {trade.comment_id}
+            </a>
           </td>
 
-          <td>{date.format('YYYY-MM-DD HH:mm:ss')}</td>
+          <td>{date.format("YYYY-MM-DD HH:mm:ss")}</td>
         </tr>
       );
     }
 
-    const numPages = Math.ceil(this.props.trades.length / this.state.pageSize);
+    const numPages = Math.ceil(this.props.count / this.state.pageSize);
 
     return (
       <Fragment>
@@ -97,23 +113,22 @@ export class Trades extends Component {
             </tr>
           </MDBTableHead>
 
-          <MDBTableBody>
-            {rows}
-          </MDBTableBody>
+          <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>
 
         <Pagination
           numPages={numPages}
           pageRange={5}
-          onPageChange={this.onPageChange} />
+          onPageChange={this.onPageChange}
+        />
       </Fragment>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  trades: state.trades.trades,
-  redditors: state.trades.redditors
+  count: state.trades.trades.count,
+  trades: state.trades.trades.trades
 });
 
-export default connect(mapStateToProps)(Trades);
+export default connect(mapStateToProps, { getTrades })(Trades);

@@ -37,8 +37,8 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
 
 
     def list(self, request):
-        qs = self.get_queryset()
-        count = Redditor.objects.count()
+        qs = self.queryset
+        count = qs.count()
         page = request.query_params.get('page', None)
         page_size = request.query_params.get('page_size', None)
         sort = request.query_params.get('sort', None)
@@ -74,5 +74,16 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [
         permissions.AllowAny
     ]
-    serializer_class = TradeSerializer
-    queryset = Trade.objects.all()
+    queryset = (Trade.objects.all()
+        .annotate(username1=F('user1__username'))
+        .annotate(username2=F('user2__username')))
+    
+    def list(self, request):
+        qs = self.queryset
+        count = qs.count()
+        page = request.query_params.get('page', None)
+        page_size = request.query_params.get('page_size', None)
+        sort = request.query_params.get('sort', None)
+
+        serializer = TradeSerializer(paginate(qs, page, page_size), many=True)
+        return Response({ 'count': count, 'trades': serializer.data })
