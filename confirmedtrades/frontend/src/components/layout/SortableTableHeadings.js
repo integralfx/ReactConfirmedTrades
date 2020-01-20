@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
-import { MDBIcon } from 'mdbreact';
-import PropTypes from 'prop-types';
-
+import React, { Component } from "react";
+import { MDBIcon } from "mdbreact";
+import PropTypes from "prop-types";
 
 export default class SortableTableHeadings extends Component {
   static propTypes = {
+    col: PropTypes.number.isRequired,
+    order: PropTypes.string.isRequired,
     headings: PropTypes.array.isRequired,
     onSortHeading: PropTypes.func.isRequired
   };
@@ -13,22 +14,25 @@ export default class SortableTableHeadings extends Component {
     super(props);
 
     this.state = {
-      col: 0,
-      order: 'asc'
+      col: this.props.col,
+      order: this.props.order
     };
   }
 
   sortHeading(index) {
-    let order = 'asc';
+    let order = "asc";
     if (index === this.state.col) {
-      order = this.state.order === 'asc' ? 'desc' : 'asc';
+      order = this.state.order === "asc" ? "desc" : "asc";
     }
 
-    this.setState({
-      ...this.state,
-      col: index,
-      order
-    }, () => this.props.onSortHeading(index, order));
+    this.setState(
+      {
+        ...this.state,
+        col: index,
+        order
+      },
+      () => this.props.onSortHeading(index, order)
+    );
   }
 
   render() {
@@ -38,18 +42,20 @@ export default class SortableTableHeadings extends Component {
     let tableHeadings = [];
     for (let i = 0; i < headings.length; i++) {
       const h = headings[i];
-      let sortIcon = '';
+      let sortIcon = "";
       if (i === col) {
-        sortIcon = (
-          <MDBIcon 
-            icon={order === 'asc' ? 'caret-up' : 'caret-down'}
-            className="ml-2" />
-        );
+        sortIcon = <MDBIcon icon={order === "asc" ? "caret-up" : "caret-down"} className="ml-2" />;
       }
 
       tableHeadings.push(
         <th key={i} style={h.style}>
-          <a href="#" onClick={e => { e.preventDefault(); this.sortHeading(i); }}>
+          <a
+            href="#"
+            onClick={e => {
+              e.preventDefault();
+              this.sortHeading(i);
+            }}
+          >
             {h.text}
             {sortIcon}
           </a>
@@ -57,8 +63,6 @@ export default class SortableTableHeadings extends Component {
       );
     }
 
-    return (
-      <tr>{tableHeadings}</tr>
-    );
+    return <tr>{tableHeadings}</tr>;
   }
 }

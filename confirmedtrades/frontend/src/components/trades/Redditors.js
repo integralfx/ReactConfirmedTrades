@@ -54,50 +54,6 @@ export class Redditors extends Component {
     this.updateRedditors();
   }
 
-  getSortedRedditors(index = 0, order = "asc") {
-    let redditors = this.props.redditors.map(r => {
-      const lastTrade = r.trades1.sort(
-        (a, b) => Date.parse(b.confirmation_datetime) - Date.parse(a.confirmation_datetime)
-      )[0];
-
-      return {
-        ...r,
-        lastTrade
-      };
-    });
-
-    switch (index) {
-      // Username
-      case 0:
-        redditors = redditors.sort((a, b) => {
-          const u1 = a.username,
-            u2 = b.username;
-          return order === "asc" ? u1.localeCompare(u2) : u2.localeCompare(u1);
-        });
-        break;
-
-      // Trades
-      case 1:
-        redditors = redditors.sort((a, b) =>
-          order === "asc"
-            ? a.trades1.length - b.trades1.length
-            : b.trades1.length - a.trades1.length
-        );
-        break;
-
-      // Last Trade
-      case 2:
-        redditors = redditors.sort((a, b) => {
-          const d1 = Date.parse(a.lastTrade.confirmation_datetime),
-            d2 = Date.parse(b.lastTrade.confirmation_datetime);
-          return order === "asc" ? d1 - d2 : d2 - d1;
-        });
-        break;
-    }
-
-    return redditors;
-  }
-
   onPageChange = pageNo => {
     this.updateRedditors(pageNo);
   };
@@ -120,6 +76,16 @@ export class Redditors extends Component {
         break;
     }
   };
+
+  convertSort(sort = this.state.sort) {
+    const sorts = ["username", "-username", "trades", "-trades", "last_trade", "-last_trade"];
+    const index = sorts.findIndex(s => s === sort);
+    if (index === -1) return { col: 0, order: "asc" };
+    return {
+      col: Math.floor(index / 2),
+      order: index % 2 == 0 ? "asc" : "desc"
+    };
+  }
 
   render() {
     if (this.state.isLoading) {
@@ -162,7 +128,9 @@ export class Redditors extends Component {
       );
     }
 
+    const colOrder = this.convertSort();
     const numPages = Math.ceil(this.props.count / this.state.pageSize);
+
     const headings = [
       {
         text: "Username",
@@ -182,7 +150,12 @@ export class Redditors extends Component {
       <Fragment>
         <MDBTable bordered hover>
           <MDBTableHead>
-            <SortableTableHeadings headings={headings} onSortHeading={this.onSortHeading} />
+            <SortableTableHeadings
+              col={colOrder.col}
+              order={colOrder.order}
+              headings={headings}
+              onSortHeading={this.onSortHeading}
+            />
           </MDBTableHead>
           <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>

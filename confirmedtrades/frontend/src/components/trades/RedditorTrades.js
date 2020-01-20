@@ -96,6 +96,16 @@ export class RedditorTrades extends Component {
     }
   };
 
+  convertSort(sort = this.state.sort) {
+    const sorts = ["username2", "-username2", "confirmation_datetime", "-confirmation_datetime"];
+    const index = sorts.findIndex(s => s === sort);
+    if (index === -1) return { col: 0, order: "asc" };
+    return {
+      col: Math.floor(index / 2),
+      order: index % 2 == 0 ? "asc" : "desc"
+    };
+  }
+
   render() {
     if (this.state.isLoading) {
       return (
@@ -136,6 +146,7 @@ export class RedditorTrades extends Component {
       );
     }
 
+    const colOrder = this.convertSort();
     const headings = [
       {
         text: "User",
@@ -175,7 +186,12 @@ export class RedditorTrades extends Component {
 
         <MDBTable bordered hover>
           <MDBTableHead>
-            <SortableTableHeadings headings={headings} onSortHeading={this.onSortHeading} />
+            <SortableTableHeadings
+              col={colOrder.col}
+              order={colOrder.order}
+              headings={headings}
+              onSortHeading={this.onSortHeading}
+            />
           </MDBTableHead>
           <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>

@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 export default class Pagination extends Component {
   static propTypes = {
     pageNo: PropTypes.number.isRequired,
-    numPags: PropTypes.number.isRequired,
+    numPages: PropTypes.number.isRequired,
     pageRange: PropTypes.number.isRequired,
     onPageChange: PropTypes.func.isRequired
   };

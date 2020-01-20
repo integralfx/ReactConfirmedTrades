@@ -76,6 +76,23 @@ export class Trades extends Component {
     }
   };
 
+  convertSort(sort = this.state.sort) {
+    const sorts = [
+      "username1",
+      "-username1",
+      "username2",
+      "-username2",
+      "confirmation_datetime",
+      "-confirmation_datetime"
+    ];
+    const index = sorts.findIndex(s => s === sort);
+    if (index === -1) return { col: 0, order: "asc" };
+    return {
+      col: Math.floor(index / 2),
+      order: index % 2 == 0 ? "asc" : "desc"
+    };
+  }
+
   render() {
     if (this.state.isLoading) {
       return (
@@ -119,8 +136,7 @@ export class Trades extends Component {
       );
     }
 
-    const numPages = Math.ceil(this.props.count / this.state.pageSize);
-
+    const colOrder = this.convertSort();
     const headings = [
       {
         text: "First User",
@@ -140,12 +156,19 @@ export class Trades extends Component {
       }
     ];
 
+    const numPages = Math.ceil(this.props.count / this.state.pageSize);
+
     return (
       <Fragment>
         <h2>Trades</h2>
         <MDBTable bordered hover>
           <MDBTableHead>
-            <SortableTableHeadings headings={headings} onSortHeading={this.onSortHeading} />
+            <SortableTableHeadings
+              col={colOrder.col}
+              order={colOrder.order}
+              headings={headings}
+              onSortHeading={this.onSortHeading}
+            />
           </MDBTableHead>
 
           <MDBTableBody>{rows}</MDBTableBody>
