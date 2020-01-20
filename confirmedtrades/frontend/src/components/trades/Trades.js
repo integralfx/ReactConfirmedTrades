@@ -32,6 +32,11 @@ export class Trades extends Component {
   }
 
   updateTrades = (pageNo = this.state.pageNo, sort = this.state.sort) => {
+    this.setState({
+      ...this.state,
+      isLoading: true
+    });
+
     const queryData = {
       page_size: this.state.pageSize,
       page: pageNo,
@@ -146,7 +151,12 @@ export class Trades extends Component {
           <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>
 
-        <Pagination numPages={numPages} pageRange={5} onPageChange={this.onPageChange} />
+        <Pagination
+          pageNo={this.state.pageNo}
+          numPages={numPages}
+          pageRange={5}
+          onPageChange={this.onPageChange}
+        />
       </Fragment>
     );
   }

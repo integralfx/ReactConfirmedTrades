@@ -1,18 +1,23 @@
-import React, { Component, Fragment } from 'react'
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types'
-import { 
-  MDBTable, MDBTableHead, MDBTableBody, 
-  MDBCard, MDBCardBody, MDBCardTitle,
-  MDBListGroup, MDBListGroupItem,
+import React, { Component, Fragment } from "react";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
+import {
+  MDBTable,
+  MDBTableHead,
+  MDBTableBody,
+  MDBCard,
+  MDBCardBody,
+  MDBCardTitle,
+  MDBListGroup,
+  MDBListGroupItem,
   MDBIcon
-} from 'mdbreact';
-import { Link } from 'react-router-dom';
-import moment from 'moment';
+} from "mdbreact";
+import { Link } from "react-router-dom";
+import moment from "moment";
 
-import { getRedditorTrades } from '../../actions/trades';
-import Pagination from '../layout/Pagination';
-import SortableTableHeadings from '../layout/SortableTableHeadings';
+import { getRedditorTrades } from "../../actions/trades";
+import Pagination from "../layout/Pagination";
+import SortableTableHeadings from "../layout/SortableTableHeadings";
 
 export class RedditorTrades extends Component {
   /*
@@ -27,9 +32,9 @@ export class RedditorTrades extends Component {
     this.state = {
       pageSize: 20,
       isLoading: true,
-      username: '',
+      username: "",
       pageNo: 1,
-      sort: 'username2'
+      sort: "username2"
     };
   }
 
@@ -40,15 +45,15 @@ export class RedditorTrades extends Component {
 
   componentDidUpdate(prevProps) {
     const prevUsername = prevProps.match.params.username,
-          currUsername = this.props.match.params.username;
+      currUsername = this.props.match.params.username;
     if (prevUsername !== currUsername) {
       this.updateTrades(currUsername, 1);
     }
   }
 
   updateTrades = (username, pageNo = this.state.pageNo, sort = this.state.sort) => {
-    const queryData = { 
-      page: pageNo, 
+    const queryData = {
+      page: pageNo,
       page_size: this.state.pageSize,
       sort
     };
@@ -63,7 +68,7 @@ export class RedditorTrades extends Component {
     });
   };
 
-  onPageChange = (pageNo) => {
+  onPageChange = pageNo => {
     this.updateTrades(this.state.username, pageNo);
   };
 
@@ -72,9 +77,9 @@ export class RedditorTrades extends Component {
       // Username
       case 0:
         this.updateTrades(
-          this.state.username, 
+          this.state.username,
           this.state.pageNo,
-          order === 'asc' ? 'username2' : '-username2'
+          order === "asc" ? "username2" : "-username2"
         );
         break;
 
@@ -83,13 +88,13 @@ export class RedditorTrades extends Component {
       case 1:
       case 2:
         this.updateTrades(
-          this.state.username, 
+          this.state.username,
           this.state.pageNo,
-          order === 'asc' ? 'confirmation_datetime' : '-confirmation_datetime'
+          order === "asc" ? "confirmation_datetime" : "-confirmation_datetime"
         );
         break;
     }
-  }
+  };
 
   render() {
     if (this.state.isLoading) {
@@ -108,7 +113,7 @@ export class RedditorTrades extends Component {
 
     const cardStyle = {
       border: "1px solid rgba(0,0,0,.125)",
-      boxShadow: 'none'
+      boxShadow: "none"
     };
 
     let rows = [];
@@ -126,24 +131,24 @@ export class RedditorTrades extends Component {
               {trade.comment_id}
             </a>
           </td>
-          <td>{date.format('YYYY-MM-DD HH:mm:ss')}</td>
+          <td>{date.format("YYYY-MM-DD HH:mm:ss")}</td>
         </tr>
       );
     }
-    
+
     const headings = [
       {
-        text: 'User',
-        style: { width: '33%' }
+        text: "User",
+        style: { width: "33%" }
       },
       {
-        text: 'Confirmation',
-        style: { width: '33%' }
+        text: "Confirmation",
+        style: { width: "33%" }
       },
       {
-        text: 'Date & Time',
-        style: { width: '33%' }
-      },
+        text: "Date & Time",
+        style: { width: "33%" }
+      }
     ];
 
     const numPages = Math.ceil(this.props.count / this.state.pageSize);
@@ -162,7 +167,7 @@ export class RedditorTrades extends Component {
               </MDBListGroupItem>
 
               <MDBListGroupItem>
-                {this.props.count} confirmed trade{this.props.count > 1 ? 's' : ''}
+                {this.props.count} confirmed trade{this.props.count > 1 ? "s" : ""}
               </MDBListGroupItem>
             </MDBListGroup>
           </MDBCardBody>
@@ -170,19 +175,17 @@ export class RedditorTrades extends Component {
 
         <MDBTable bordered hover>
           <MDBTableHead>
-            <SortableTableHeadings
-              headings={headings}
-              onSortHeading={this.onSortHeading} />
+            <SortableTableHeadings headings={headings} onSortHeading={this.onSortHeading} />
           </MDBTableHead>
-          <MDBTableBody>
-            {rows}
-          </MDBTableBody>
+          <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>
 
         <Pagination
+          pageNo={this.state.pageNo}
           numPages={numPages}
           pageRange={3}
-          onPageChange={this.onPageChange} />
+          onPageChange={this.onPageChange}
+        />
       </Fragment>
     );
   }
