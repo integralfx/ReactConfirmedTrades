@@ -85,5 +85,11 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
         page_size = request.query_params.get('page_size', None)
         sort = request.query_params.get('sort', None)
 
+        if sort is not None:
+            if (sort == 'username1' or sort == '-username1' or
+                sort == 'username2' or sort == '-username2' or
+                sort == 'confirmation_datetime' or sort == '-confirmation_datetime'):
+                qs = qs.order_by(sort)
+
         serializer = TradeSerializer(paginate(qs, page, page_size), many=True)
         return Response({ 'count': count, 'trades': serializer.data })

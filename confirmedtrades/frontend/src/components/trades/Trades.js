@@ -2,11 +2,12 @@ import React, { Component, Fragment } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
+import { Link } from "react-router-dom";
 import moment from "moment";
 
-import Pagination from "../layout/Pagination";
-import { Link } from "react-router-dom";
 import { getTrades } from "../../actions/trades";
+import Pagination from "../layout/Pagination";
+import SortableTableHeadings from "../layout/SortableTableHeadings";
 
 export class Trades extends Component {
   /*
@@ -33,7 +34,8 @@ export class Trades extends Component {
   updateTrades = (pageNo = this.state.pageNo, sort = this.state.sort) => {
     const queryData = {
       page_size: this.state.pageSize,
-      page: pageNo
+      page: pageNo,
+      sort
     };
     this.props.getTrades(queryData, () => {
       this.setState({
@@ -48,15 +50,32 @@ export class Trades extends Component {
     this.updateTrades(pageNo);
   };
 
+  onSortHeading = (index, order) => {
+    switch (index) {
+      // First User
+      case 0:
+        this.updateTrades(this.state.pageNo, order === "asc" ? "username1" : "-username1");
+        break;
+      // Second User
+      case 1:
+        this.updateTrades(this.state.pageNo, order === "asc" ? "username2" : "-username2");
+        break;
+      // Comment ID and Date
+      case 2:
+      case 3:
+        this.updateTrades(
+          this.state.pageNo,
+          order === "asc" ? "confirmation_datetime" : "-confirmation_datetime"
+        );
+        break;
+    }
+  };
+
   render() {
     if (this.state.isLoading) {
       return (
         <div className="text-center">
-          <div
-            className="spinner-border"
-            style={{ width: "5rem", height: "5rem" }}
-            role="status"
-          >
+          <div className="spinner-border" style={{ width: "5rem", height: "5rem" }} role="status">
             <span className="sr-only">Loading...</span>
           </div>
         </div>
@@ -72,8 +91,6 @@ export class Trades extends Component {
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
-          <td>{trade.id}</td>
-
           <td>
             <Link to={`/redditors/${trade.username1}`} style={linkStyle}>
               {trade.username1}
@@ -99,28 +116,37 @@ export class Trades extends Component {
 
     const numPages = Math.ceil(this.props.count / this.state.pageSize);
 
+    const headings = [
+      {
+        text: "First User",
+        style: { width: "20%" }
+      },
+      {
+        text: "Second User",
+        style: { width: "20%" }
+      },
+      {
+        text: "Confirmation",
+        style: { width: "25%" }
+      },
+      {
+        text: "Date & Time",
+        style: { width: "25%" }
+      }
+    ];
+
     return (
       <Fragment>
         <h2>Trades</h2>
         <MDBTable bordered hover>
           <MDBTableHead>
-            <tr>
-              <th style={{ width: "10%" }}>ID</th>
-              <th style={{ width: "20%" }}>First User</th>
-              <th style={{ width: "20%" }}>Second User</th>
-              <th style={{ width: "25%" }}>Confirmation</th>
-              <th style={{ width: "25%" }}>Date & Time</th>
-            </tr>
+            <SortableTableHeadings headings={headings} onSortHeading={this.onSortHeading} />
           </MDBTableHead>
 
           <MDBTableBody>{rows}</MDBTableBody>
         </MDBTable>
 
-        <Pagination
-          numPages={numPages}
-          pageRange={5}
-          onPageChange={this.onPageChange}
-        />
+        <Pagination numPages={numPages} pageRange={5} onPageChange={this.onPageChange} />
       </Fragment>
     );
   }
