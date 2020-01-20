@@ -52,6 +52,11 @@ export class RedditorTrades extends Component {
   }
 
   updateTrades = (username, pageNo = this.state.pageNo, sort = this.state.sort) => {
+    this.setState({
+      ...this.state,
+      isLoading: true
+    });
+
     const queryData = {
       page: pageNo,
       page_size: this.state.pageSize,
