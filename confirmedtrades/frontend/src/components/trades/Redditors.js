@@ -8,6 +8,7 @@ import moment from "moment";
 import { getRedditors } from "../../actions/trades";
 import Pagination from "../layout/Pagination";
 import SortableTableHeadings from "../layout/SortableTableHeadings";
+import styles from "../../styles";
 
 export class Redditors extends Component {
   /*
@@ -92,10 +93,6 @@ export class Redditors extends Component {
       );
     }
 
-    const linkStyle = {
-      color: "#007bff"
-    };
-
     let rows = [];
     for (const redditor of this.props.redditors) {
       const lastTrade = redditor.trades1.sort((a, b) => {
@@ -108,7 +105,7 @@ export class Redditors extends Component {
       rows.push(
         <tr key={redditor.id}>
           <td>
-            <Link to={`/redditors/${redditor.username}`} style={linkStyle}>
+            <Link to={`/redditors/${redditor.username}`} style={styles.link}>
               {redditor.username}
             </Link>
           </td>

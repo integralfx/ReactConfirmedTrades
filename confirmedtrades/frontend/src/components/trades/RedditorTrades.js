@@ -18,6 +18,7 @@ import moment from "moment";
 import { getRedditorTrades } from "../../actions/trades";
 import Pagination from "../layout/Pagination";
 import SortableTableHeadings from "../layout/SortableTableHeadings";
+import styles from "../../styles";
 
 export class RedditorTrades extends Component {
   /*
@@ -111,27 +112,18 @@ export class RedditorTrades extends Component {
       );
     }
 
-    const linkStyle = {
-      color: "#007bff"
-    };
-
-    const cardStyle = {
-      border: "1px solid rgba(0,0,0,.125)",
-      boxShadow: "none"
-    };
-
     let rows = [];
     for (const trade of this.props.trades) {
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
           <td>
-            <Link to={`/redditors/${trade.username2}`} style={linkStyle}>
+            <Link to={`/redditors/${trade.username2}`} style={styles.link}>
               {trade.username2}
             </Link>
           </td>
           <td>
-            <a style={linkStyle} href={trade.comment_url}>
+            <a style={styles.link} href={trade.comment_url}>
               {trade.comment_id}
             </a>
           </td>
@@ -159,13 +151,13 @@ export class RedditorTrades extends Component {
 
     return (
       <Fragment>
-        <MDBCard style={cardStyle} className="mb-4">
+        <MDBCard style={styles.card} className="mb-4">
           <MDBCardBody>
             <MDBCardTitle>Trades for {this.state.username}</MDBCardTitle>
 
             <MDBListGroup>
               <MDBListGroupItem>
-                <a href={`https://reddit.com/user/${this.state.username}`} style={linkStyle}>
+                <a href={`https://reddit.com/user/${this.state.username}`} style={styles.link}>
                   Reddit Profile
                 </a>
               </MDBListGroupItem>

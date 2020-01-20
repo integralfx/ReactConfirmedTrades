@@ -8,6 +8,7 @@ import moment from "moment";
 import { getTrades } from "../../actions/trades";
 import Pagination from "../layout/Pagination";
 import SortableTableHeadings from "../layout/SortableTableHeadings";
+import styles from "../../styles";
 
 export class Trades extends Component {
   /*
@@ -86,29 +87,25 @@ export class Trades extends Component {
       );
     }
 
-    const linkStyle = {
-      color: "#007bff"
-    };
-
     let rows = [];
     for (const trade of this.props.trades) {
       const date = moment(Date.parse(trade.confirmation_datetime));
       rows.push(
         <tr key={trade.id}>
           <td>
-            <Link to={`/redditors/${trade.username1}`} style={linkStyle}>
+            <Link to={`/redditors/${trade.username1}`} style={styles.link}>
               {trade.username1}
             </Link>
           </td>
 
           <td>
-            <Link to={`/redditors/${trade.usernam2}`} style={linkStyle}>
+            <Link to={`/redditors/${trade.username2}`} style={styles.link}>
               {trade.username2}
             </Link>
           </td>
 
           <td>
-            <a href={trade.comment_url} style={linkStyle}>
+            <a href={trade.comment_url} style={styles.link}>
               {trade.comment_id}
             </a>
           </td>
