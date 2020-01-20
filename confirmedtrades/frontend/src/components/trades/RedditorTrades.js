@@ -34,7 +34,8 @@ export class RedditorTrades extends Component {
       isLoading: true,
       username: "",
       pageNo: 1,
-      sort: "username2"
+      col: 0,
+      order: "asc"
     };
   }
 
@@ -51,7 +52,24 @@ export class RedditorTrades extends Component {
     }
   }
 
-  updateTrades = (username, pageNo = this.state.pageNo, sort = this.state.sort) => {
+  colOrderToSort = (col = this.state.col, order = this.state.order) => {
+    switch (col) {
+      case 0:
+        return order === "asc" ? "username2" : "-username2";
+      case 1:
+      case 2:
+        return order === "asc" ? "confirmation_datetime" : "-confirmation_datetime";
+      default:
+        return "username2";
+    }
+  };
+
+  updateTrades = (
+    username,
+    pageNo = this.state.pageNo,
+    col = this.state.col,
+    order = this.state.order
+  ) => {
     this.setState({
       ...this.state,
       isLoading: true
@@ -60,7 +78,7 @@ export class RedditorTrades extends Component {
     const queryData = {
       page: pageNo,
       page_size: this.state.pageSize,
-      sort
+      sort: this.colOrderToSort(col, order)
     };
     this.props.getRedditorTrades(username, queryData, () => {
       this.setState({
@@ -68,48 +86,19 @@ export class RedditorTrades extends Component {
         isLoading: false,
         username,
         pageNo,
-        sort
+        col,
+        order
       });
     });
+  };
+
+  onSortHeading = (index, order) => {
+    this.updateTrades(this.state.username, this.state.pageNo, index, order);
   };
 
   onPageChange = pageNo => {
     this.updateTrades(this.state.username, pageNo);
   };
-
-  onSortHeading = (index, order) => {
-    switch (index) {
-      // Username
-      case 0:
-        this.updateTrades(
-          this.state.username,
-          this.state.pageNo,
-          order === "asc" ? "username2" : "-username2"
-        );
-        break;
-
-      // Comment ID, Date & Time
-      // Comment IDs seem to follow date & time
-      case 1:
-      case 2:
-        this.updateTrades(
-          this.state.username,
-          this.state.pageNo,
-          order === "asc" ? "confirmation_datetime" : "-confirmation_datetime"
-        );
-        break;
-    }
-  };
-
-  convertSort(sort = this.state.sort) {
-    const sorts = ["username2", "-username2", "confirmation_datetime", "-confirmation_datetime"];
-    const index = sorts.findIndex(s => s === sort);
-    if (index === -1) return { col: 0, order: "asc" };
-    return {
-      col: Math.floor(index / 2),
-      order: index % 2 == 0 ? "asc" : "desc"
-    };
-  }
 
   render() {
     if (this.state.isLoading) {
@@ -151,7 +140,6 @@ export class RedditorTrades extends Component {
       );
     }
 
-    const colOrder = this.convertSort();
     const headings = [
       {
         text: "User",
@@ -192,8 +180,8 @@ export class RedditorTrades extends Component {
         <MDBTable bordered hover>
           <MDBTableHead>
             <SortableTableHeadings
-              col={colOrder.col}
-              order={colOrder.order}
+              col={this.state.col}
+              order={this.state.order}
               headings={headings}
               onSortHeading={this.onSortHeading}
             />

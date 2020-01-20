@@ -23,7 +23,8 @@ export class Trades extends Component {
       pageSize: 20,
       pageNo: 1,
       isLoading: true,
-      sort: "username1"
+      col: 0,
+      order: "asc"
     };
   }
 
@@ -31,7 +32,21 @@ export class Trades extends Component {
     this.updateTrades();
   }
 
-  updateTrades = (pageNo = this.state.pageNo, sort = this.state.sort) => {
+  colOrderToSort = (col = this.state.col, order = this.state.order) => {
+    switch (col) {
+      case 0:
+        return order === "asc" ? "username1" : "-username1";
+      case 1:
+        return order === "asc" ? "username2" : "-username2";
+      case 2:
+      case 3:
+        return order === "asc" ? "confirmation_datetime" : "-confirmation_datetime";
+      default:
+        return "username1";
+    }
+  };
+
+  updateTrades = (pageNo = this.state.pageNo, col = this.state.col, order = this.state.order) => {
     this.setState({
       ...this.state,
       isLoading: true
@@ -40,58 +55,25 @@ export class Trades extends Component {
     const queryData = {
       page_size: this.state.pageSize,
       page: pageNo,
-      sort
+      sort: this.colOrderToSort(col, order)
     };
     this.props.getTrades(queryData, () => {
       this.setState({
         pageNo,
         isLoading: false,
-        sort
+        col,
+        order
       });
     });
+  };
+
+  onSortHeading = (index, order) => {
+    this.updateTrades(this.state.pageNo, index, order);
   };
 
   onPageChange = pageNo => {
     this.updateTrades(pageNo);
   };
-
-  onSortHeading = (index, order) => {
-    switch (index) {
-      // First User
-      case 0:
-        this.updateTrades(this.state.pageNo, order === "asc" ? "username1" : "-username1");
-        break;
-      // Second User
-      case 1:
-        this.updateTrades(this.state.pageNo, order === "asc" ? "username2" : "-username2");
-        break;
-      // Comment ID and Date
-      case 2:
-      case 3:
-        this.updateTrades(
-          this.state.pageNo,
-          order === "asc" ? "confirmation_datetime" : "-confirmation_datetime"
-        );
-        break;
-    }
-  };
-
-  convertSort(sort = this.state.sort) {
-    const sorts = [
-      "username1",
-      "-username1",
-      "username2",
-      "-username2",
-      "confirmation_datetime",
-      "-confirmation_datetime"
-    ];
-    const index = sorts.findIndex(s => s === sort);
-    if (index === -1) return { col: 0, order: "asc" };
-    return {
-      col: Math.floor(index / 2),
-      order: index % 2 == 0 ? "asc" : "desc"
-    };
-  }
 
   render() {
     if (this.state.isLoading) {
@@ -136,7 +118,6 @@ export class Trades extends Component {
       );
     }
 
-    const colOrder = this.convertSort();
     const headings = [
       {
         text: "First User",
@@ -164,8 +145,8 @@ export class Trades extends Component {
         <MDBTable bordered hover>
           <MDBTableHead>
             <SortableTableHeadings
-              col={colOrder.col}
-              order={colOrder.order}
+              col={this.state.col}
+              order={this.state.order}
               headings={headings}
               onSortHeading={this.onSortHeading}
             />

@@ -25,11 +25,33 @@ export class Redditors extends Component {
       isLoading: true,
       pageSize: 20,
       pageNo: 1,
-      sort: "username"
+      col: 0,
+      order: "asc"
     };
   }
 
-  updateRedditors = (pageNo = this.state.pageNo, sort = this.state.sort) => {
+  componentDidMount() {
+    this.updateRedditors();
+  }
+
+  colOrderToSort = (col = this.state.col, order = this.state.order) => {
+    switch (col) {
+      case 0:
+        return order === "asc" ? "username" : "-username";
+      case 1:
+        return order === "asc" ? "trades" : "-trades";
+      case 2:
+        return order === "asc" ? "last_trade" : "-last_trade";
+      default:
+        return "username";
+    }
+  };
+
+  updateRedditors = (
+    pageNo = this.state.pageNo,
+    col = this.state.col,
+    order = this.state.order
+  ) => {
     this.setState({
       ...this.state,
       isLoading: true
@@ -38,54 +60,26 @@ export class Redditors extends Component {
     const queryData = {
       page: pageNo,
       page_size: this.state.pageSize,
-      sort
+      sort: this.colOrderToSort(col, order)
     };
     this.props.getRedditors(queryData, () => {
       this.setState({
         ...this.state,
         isLoading: false,
         pageNo,
-        sort
+        col,
+        order
       });
     });
   };
 
-  componentDidMount() {
-    this.updateRedditors();
-  }
+  onSortHeading = (index, order) => {
+    this.updateRedditors(this.state.pageNo, index, order);
+  };
 
   onPageChange = pageNo => {
     this.updateRedditors(pageNo);
   };
-
-  onSortHeading = (index, order) => {
-    switch (index) {
-      // Username
-      case 0:
-        this.updateRedditors(this.state.pageNo, order === "asc" ? "username" : "-username");
-        break;
-
-      // Trades
-      case 1:
-        this.updateRedditors(this.state.pageNo, order === "asc" ? "trades" : "-trades");
-        break;
-
-      // Last Trade
-      case 2:
-        this.updateRedditors(this.state.pageNo, order === "asc" ? "last_trade" : "-last_trade");
-        break;
-    }
-  };
-
-  convertSort(sort = this.state.sort) {
-    const sorts = ["username", "-username", "trades", "-trades", "last_trade", "-last_trade"];
-    const index = sorts.findIndex(s => s === sort);
-    if (index === -1) return { col: 0, order: "asc" };
-    return {
-      col: Math.floor(index / 2),
-      order: index % 2 == 0 ? "asc" : "desc"
-    };
-  }
 
   render() {
     if (this.state.isLoading) {
@@ -128,7 +122,6 @@ export class Redditors extends Component {
       );
     }
 
-    const colOrder = this.convertSort();
     const numPages = Math.ceil(this.props.count / this.state.pageSize);
 
     const headings = [
@@ -151,8 +144,8 @@ export class Redditors extends Component {
         <MDBTable bordered hover>
           <MDBTableHead>
             <SortableTableHeadings
-              col={colOrder.col}
-              order={colOrder.order}
+              col={this.state.col}
+              order={this.state.order}
               headings={headings}
               onSortHeading={this.onSortHeading}
             />
