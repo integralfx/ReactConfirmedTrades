@@ -166,8 +166,7 @@ export class Redditors extends Component {
 
 const mapStateToProps = state => ({
   count: state.trades.redditors.count,
-  redditors: state.trades.redditors.redditors,
-  trades: state.trades.trades
+  redditors: state.trades.redditors.redditors
 });
 
 export default connect(mapStateToProps, { getRedditors })(Redditors);
