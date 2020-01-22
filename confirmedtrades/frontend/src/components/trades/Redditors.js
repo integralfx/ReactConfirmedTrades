@@ -10,7 +10,10 @@ import {
   MDBCollapse,
   MDBCard,
   MDBCardBody,
-  MDBIcon
+  MDBIcon,
+  MDBInput,
+  MDBRow,
+  MDBCol
 } from "mdbreact";
 import moment from "moment";
 
@@ -28,6 +31,10 @@ export class Redditors extends Component {
   };
   */
 
+  MIN_DATE = "2011-06-21";
+
+  MAX_DATE = moment().format("YYYY-MM-DD");
+
   constructor(props) {
     super(props);
 
@@ -37,7 +44,14 @@ export class Redditors extends Component {
       pageNo: 1,
       col: 0,
       order: "asc",
-      isCollapsed: true
+      isCollapsed: true,
+      form: {
+        username: "",
+        minTrades: 1,
+        maxTrades: 500,
+        minDate: this.MIN_DATE,
+        maxDate: this.MAX_DATE
+      }
     };
   }
 
@@ -71,7 +85,10 @@ export class Redditors extends Component {
     const queryData = {
       page: pageNo,
       page_size: this.state.pageSize,
-      sort: this.colOrderToSort(col, order)
+      sort: this.colOrderToSort(col, order),
+      username: this.state.form.username,
+      min_trades: this.state.form.minTrades,
+      max_trades: this.state.form.maxTrades
     };
     this.props.getRedditors(queryData, () => {
       this.setState({
@@ -90,6 +107,27 @@ export class Redditors extends Component {
 
   onPageChange = pageNo => {
     this.updateRedditors(pageNo);
+  };
+
+  onTradesChange = name => e => {
+    if (e.target.valueAsNumber) {
+      const form = JSON.parse(JSON.stringify(this.state.form));
+      form[name] = e.target.valueAsNumber;
+      this.setState({
+        ...this.state,
+        form
+      });
+    }
+  };
+
+  onDateChange = name => e => {
+    const date = e.target.value;
+    const form = JSON.parse(JSON.stringify(this.state.form));
+    form[name] = date;
+    this.setState({
+      ...this.state,
+      form
+    });
   };
 
   render() {
@@ -159,7 +197,105 @@ export class Redditors extends Component {
 
           <MDBCollapse className="border rounded" isOpen={!this.state.isCollapsed}>
             <MDBCard style={styles.card}>
-              <MDBCardBody>Some filters here</MDBCardBody>
+              <MDBCardBody>
+                <form onSubmit={() => this.updateRedditors()}>
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <MDBInput
+                        label="Username"
+                        type="text"
+                        group
+                        value={this.state.form.username}
+                        onChange={e =>
+                          this.setState({
+                            ...this.state,
+                            form: { ...this.state.form, username: e.target.value }
+                          })
+                        }
+                      />
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <div className="form-group">
+                        <label htmlFor="inputMinTrades">Trades (inclusive)</label>
+
+                        <MDBRow>
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMinTrades"
+                              type="number"
+                              className="form-control"
+                              min={1}
+                              max={this.state.form.maxTrades - 1}
+                              value={this.state.form.minTrades}
+                              onChange={this.onTradesChange("minTrades")}
+                            />
+                          </MDBCol>
+
+                          <MDBCol sm="2" className="mt-2 text-center">
+                            <span>to</span>
+                          </MDBCol>
+
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMaxTrades"
+                              type="number"
+                              className="form-control"
+                              min={this.state.form.minTrades + 1}
+                              max={500}
+                              value={this.state.form.maxTrades}
+                              onChange={this.onTradesChange("maxTrades")}
+                            />
+                          </MDBCol>
+                        </MDBRow>
+                      </div>
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <div className="form-group">
+                        <label htmlFor="inputMinDate">Date (inclusive)</label>
+                        <MDBRow>
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMinDate"
+                              type="date"
+                              className="form-control"
+                              min={this.MIN_DATE}
+                              max={moment(this.state.form.maxDate, "YYYY-MM-DD").subtract(1, "day")}
+                              value={this.state.form.minDate}
+                              onChange={this.onDateChange("minDate")}
+                            />
+                          </MDBCol>
+
+                          <MDBCol sm="2" className="mt-2 text-center">
+                            <span>to</span>
+                          </MDBCol>
+
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMaxDate"
+                              type="date"
+                              className="form-control"
+                              min={moment(this.state.form.minDate, "YYYY-MM-DD").add(1, "day")}
+                              max={this.MAX_DATE}
+                              value={this.state.form.maxDate}
+                              onChange={this.onDateChange("maxDate")}
+                            />
+                          </MDBCol>
+                        </MDBRow>
+                      </div>
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBBtn type="submit" color="primary">
+                    Submit
+                  </MDBBtn>
+                </form>
+              </MDBCardBody>
             </MDBCard>
           </MDBCollapse>
         </div>

@@ -38,10 +38,21 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
 
     def list(self, request):
         qs = self.queryset
-        count = qs.count()
+        username = request.query_params.get('username', None)
+        min_trades = request.query_params.get('min_trades', None)
+        max_trades = request.query_params.get('max_trades', None)
         page = request.query_params.get('page', None)
         page_size = request.query_params.get('page_size', None)
         sort = request.query_params.get('sort', None)
+
+        if username is not None:
+            qs = qs.filter(username__icontains=username)
+
+        if min_trades is not None and min_trades.isdigit():
+            qs = qs.filter(trades__gte=int(min_trades))
+
+        if max_trades is not None and max_trades.isdigit():
+            qs = qs.filter(trades__lte=int(max_trades))
 
         if sort is not None:
             if (sort == 'username' or sort == '-username' or
@@ -50,7 +61,7 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
                 qs = qs.order_by(sort)
 
         serializer = RedditorSerializer(paginate(qs, page, page_size), many=True)
-        return Response({ 'count': count, 'redditors': serializer.data })
+        return Response({ 'count': qs.count(), 'redditors': serializer.data })
 
     
     def retrieve(self, request, username=None):
