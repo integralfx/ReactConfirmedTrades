@@ -200,7 +200,7 @@ export class Redditors extends Component {
           <MDBCollapse className="border rounded" isOpen={!this.state.isCollapsed}>
             <MDBCard style={styles.card}>
               <MDBCardBody>
-                <form onSubmit={() => this.updateRedditors()}>
+                <form onSubmit={() => this.updateRedditors(1)}>
                   <MDBRow>
                     <MDBCol sm="6">
                       <MDBInput
