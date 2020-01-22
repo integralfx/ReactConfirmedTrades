@@ -88,7 +88,9 @@ export class Redditors extends Component {
       sort: this.colOrderToSort(col, order),
       username: this.state.form.username,
       min_trades: this.state.form.minTrades,
-      max_trades: this.state.form.maxTrades
+      max_trades: this.state.form.maxTrades,
+      min_date: this.state.form.minDate,
+      max_date: this.state.form.maxDate
     };
     this.props.getRedditors(queryData, () => {
       this.setState({
@@ -257,7 +259,7 @@ export class Redditors extends Component {
                   <MDBRow>
                     <MDBCol sm="6">
                       <div className="form-group">
-                        <label htmlFor="inputMinDate">Date (inclusive)</label>
+                        <label htmlFor="inputMinDate">Last Trade Date (inclusive)</label>
                         <MDBRow>
                           <MDBCol sm="5">
                             <input
@@ -298,6 +300,10 @@ export class Redditors extends Component {
               </MDBCardBody>
             </MDBCard>
           </MDBCollapse>
+        </div>
+
+        <div>
+          {this.props.count} Redditor{this.props.count > 1 ? "s" : ""}
         </div>
 
         <MDBTable bordered hover>

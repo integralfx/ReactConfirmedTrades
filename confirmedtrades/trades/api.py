@@ -3,6 +3,7 @@ from django.db.models import Count, F, Max
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from datetime import datetime
 from .models import Redditor, Trade
 from .serializers import RedditorSerializer, TradeSerializer
 
@@ -12,6 +13,9 @@ def paginate(queryset, page, page_size):
 
     if page is not None and page.isdigit():
         page = int(page)
+
+        if page <= 0:
+            return queryset
 
         if page_size is not None and page_size.isdigit():
             page_size = int(page_size)
@@ -41,6 +45,8 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
         username = request.query_params.get('username', None)
         min_trades = request.query_params.get('min_trades', None)
         max_trades = request.query_params.get('max_trades', None)
+        min_date = request.query_params.get('min_date', None)
+        max_date = request.query_params.get('max_date', None)
         page = request.query_params.get('page', None)
         page_size = request.query_params.get('page_size', None)
         sort = request.query_params.get('sort', None)
@@ -53,6 +59,20 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
 
         if max_trades is not None and max_trades.isdigit():
             qs = qs.filter(trades__lte=int(max_trades))
+
+        if min_date is not None:
+            try:
+                date = datetime.strptime(min_date, '%Y-%m-%d')
+                qs = qs.filter(last_trade__gte=date)
+            except ValueError as e:
+                print(e)
+
+        if max_date is not None:
+            try:
+                date = datetime.strptime(max_date, '%Y-%m-%d')
+                qs - qs.filter(last_trade__lte=date)
+            except:
+                pass
 
         if sort is not None:
             if (sort == 'username' or sort == '-username' or
