@@ -2,7 +2,16 @@ import React, { Component, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
+import {
+  MDBTable,
+  MDBTableHead,
+  MDBTableBody,
+  MDBBtn,
+  MDBCollapse,
+  MDBCard,
+  MDBCardBody,
+  MDBIcon
+} from "mdbreact";
 import moment from "moment";
 
 import { getRedditors } from "../../actions/trades";
@@ -27,7 +36,8 @@ export class Redditors extends Component {
       pageSize: 20,
       pageNo: 1,
       col: 0,
-      order: "asc"
+      order: "asc",
+      isCollapsed: true
     };
   }
 
@@ -138,6 +148,22 @@ export class Redditors extends Component {
 
     return (
       <Fragment>
+        <div className="mb-4">
+          <MDBBtn
+            color="primary"
+            onClick={() => this.setState({ ...this.state, isCollapsed: !this.state.isCollapsed })}
+          >
+            Filters
+            <MDBIcon icon="filter" className="ml-2" />
+          </MDBBtn>
+
+          <MDBCollapse className="border rounded" isOpen={!this.state.isCollapsed}>
+            <MDBCard style={styles.card}>
+              <MDBCardBody>Some filters here</MDBCardBody>
+            </MDBCard>
+          </MDBCollapse>
+        </div>
+
         <MDBTable bordered hover>
           <MDBTableHead>
             <SortableTableHeadings
