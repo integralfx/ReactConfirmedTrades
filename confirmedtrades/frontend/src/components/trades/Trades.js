@@ -1,7 +1,19 @@
 import React, { Component, Fragment } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { MDBTable, MDBTableHead, MDBTableBody } from "mdbreact";
+import {
+  MDBTable,
+  MDBTableHead,
+  MDBTableBody,
+  MDBBtn,
+  MDBCollapse,
+  MDBCard,
+  MDBCardBody,
+  MDBIcon,
+  MDBInput,
+  MDBRow,
+  MDBCol
+} from "mdbreact";
 import { Link } from "react-router-dom";
 import moment from "moment";
 
@@ -17,6 +29,10 @@ export class Trades extends Component {
   };
   */
 
+  MIN_DATE = "2011-06-21";
+
+  MAX_DATE = moment().format("YYYY-MM-DD");
+
   constructor(props) {
     super(props);
 
@@ -25,7 +41,14 @@ export class Trades extends Component {
       pageNo: 1,
       isLoading: true,
       col: 0,
-      order: "asc"
+      order: "asc",
+      isCollapsed: true,
+      form: {
+        firstUser: "",
+        secondUser: "",
+        minDate: this.MIN_DATE,
+        maxDate: this.MAX_DATE
+      }
     };
   }
 
@@ -53,10 +76,15 @@ export class Trades extends Component {
       isLoading: true
     });
 
+    const { firstUser, secondUser, minDate, maxDate } = this.state.form;
     const queryData = {
       page_size: this.state.pageSize,
       page: pageNo,
-      sort: this.colOrderToSort(col, order)
+      sort: this.colOrderToSort(col, order),
+      first_user: firstUser,
+      second_user: secondUser,
+      min_date: minDate,
+      max_date: maxDate
     };
     this.props.getTrades(queryData, () => {
       this.setState({
@@ -74,6 +102,16 @@ export class Trades extends Component {
 
   onPageChange = pageNo => {
     this.updateTrades(pageNo);
+  };
+
+  onDateChange = name => e => {
+    const date = e.target.value;
+    const form = JSON.parse(JSON.stringify(this.state.form));
+    form[name] = date;
+    this.setState({
+      ...this.state,
+      form
+    });
   };
 
   render() {
@@ -139,6 +177,104 @@ export class Trades extends Component {
     return (
       <Fragment>
         <h2>Trades</h2>
+
+        <div className="mb-4">
+          <MDBBtn
+            color="primary"
+            onClick={() => this.setState({ ...this.state, isCollapsed: !this.state.isCollapsed })}
+          >
+            Filters
+            <MDBIcon icon="filter" className="ml-2" />
+          </MDBBtn>
+
+          <MDBCollapse className="border rounded" isOpen={!this.state.isCollapsed}>
+            <MDBCard style={styles.card}>
+              <MDBCardBody>
+                <form onSubmit={() => this.updateTrades(1)}>
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <MDBInput
+                        label="First User"
+                        type="text"
+                        group
+                        value={this.state.form.firstUser}
+                        onChange={e =>
+                          this.setState({
+                            ...this.state,
+                            form: { ...this.state.form, firstUser: e.target.value }
+                          })
+                        }
+                      />
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <MDBInput
+                        label="Second User"
+                        type="text"
+                        group
+                        value={this.state.form.secondUser}
+                        onChange={e =>
+                          this.setState({
+                            ...this.state,
+                            form: { ...this.state.form, secondUser: e.target.value }
+                          })
+                        }
+                      />
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBRow>
+                    <MDBCol sm="6">
+                      <div className="form-group">
+                        <label htmlFor="inputMinDate">Date (inclusive)</label>
+                        <MDBRow>
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMinDate"
+                              type="date"
+                              className="form-control"
+                              min={this.MIN_DATE}
+                              max={moment(this.state.form.maxDate, "YYYY-MM-DD").subtract(1, "day")}
+                              value={this.state.form.minDate}
+                              onChange={this.onDateChange("minDate")}
+                            />
+                          </MDBCol>
+
+                          <MDBCol sm="2" className="mt-2 text-center">
+                            <span>to</span>
+                          </MDBCol>
+
+                          <MDBCol sm="5">
+                            <input
+                              id="inputMaxDate"
+                              type="date"
+                              className="form-control"
+                              min={moment(this.state.form.minDate, "YYYY-MM-DD").add(1, "day")}
+                              max={this.MAX_DATE}
+                              value={this.state.form.maxDate}
+                              onChange={this.onDateChange("maxDate")}
+                            />
+                          </MDBCol>
+                        </MDBRow>
+                      </div>
+                    </MDBCol>
+                  </MDBRow>
+
+                  <MDBBtn type="submit" color="primary">
+                    Submit
+                  </MDBBtn>
+                </form>
+              </MDBCardBody>
+            </MDBCard>
+          </MDBCollapse>
+        </div>
+
+        <div>
+          {this.props.count} Trade{this.props.count > 1 ? "s" : ""}
+        </div>
+
         <MDBTable bordered hover>
           <MDBTableHead>
             <SortableTableHeadings

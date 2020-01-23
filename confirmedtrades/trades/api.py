@@ -111,10 +111,33 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     
     def list(self, request):
         qs = self.queryset
-        count = qs.count()
+        first_user = request.query_params.get('first_user', None)
+        second_user = request.query_params.get('second_user', None)
+        min_date = request.query_params.get('min_date', None)
+        max_date = request.query_params.get('max_date', None)
         page = request.query_params.get('page', None)
         page_size = request.query_params.get('page_size', None)
         sort = request.query_params.get('sort', None)
+
+        if first_user is not None:
+            qs = qs.filter(username1__icontains=first_user)
+
+        if second_user is not None:
+            qs = qs.filter(username2__icontains=second_user)
+
+        if min_date is not None:
+            try:
+                date = datetime.strptime(min_date, '%Y-%m-%d')
+                qs = qs.filter(confirmation_datetime__gte=date)
+            except ValueError as e:
+                print(e)
+
+        if max_date is not None:
+            try:
+                date = datetime.strptime(max_date, '%Y-%m-%d')
+                qs - qs.filter(confirmation_datetime__lte=date)
+            except:
+                pass
 
         if sort is not None:
             if (sort == 'username1' or sort == '-username1' or
@@ -123,4 +146,4 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
                 qs = qs.order_by(sort)
 
         serializer = TradeSerializer(paginate(qs, page, page_size), many=True)
-        return Response({ 'count': count, 'trades': serializer.data })
+        return Response({ 'count': qs.count(), 'trades': serializer.data })
