@@ -20,6 +20,7 @@ export default class Pagination extends Component {
 
   setPageNo = pageNo => {
     pageNo = parseInt(pageNo);
+    if (pageNo <= 0) return;
     this.setState(
       {
         ...this.state,
