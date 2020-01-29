@@ -21,7 +21,7 @@ def paginate(queryset, page, page_size):
             page_size = int(page_size)
         else:
             page_size = 20
-        
+
         start = (page - 1) * page_size
         end = page * page_size
         if start < count:
@@ -36,9 +36,8 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     lookup_field = 'username'
     queryset = (Redditor.objects.all()
-        .annotate(trades=Count('trades1'))
-        .annotate(last_trade=Max('trades1__confirmation_datetime')))
-
+                .annotate(trades=Count('trades1'))
+                .annotate(last_trade=Max('trades1__confirmation_datetime')))
 
     def list(self, request):
         qs = self.queryset
@@ -70,35 +69,57 @@ class RedditorViewSet(viewsets.ReadOnlyModelViewSet):
         if max_date is not None:
             try:
                 date = datetime.strptime(max_date, '%Y-%m-%d')
-                qs - qs.filter(last_trade__lte=date)
-            except:
-                pass
+                qs = qs.filter(last_trade__lte=date)
+            except ValueError as e:
+                print(e)
 
         if sort is not None:
             if (sort == 'username' or sort == '-username' or
                 sort == 'trades' or sort == '-trades' or
-                sort == 'last_trade' or sort == '-last_trade'):
+                    sort == 'last_trade' or sort == '-last_trade'):
                 qs = qs.order_by(sort)
 
-        serializer = RedditorSerializer(paginate(qs, page, page_size), many=True)
-        return Response({ 'count': qs.count(), 'redditors': serializer.data })
+        serializer = RedditorSerializer(
+            paginate(qs, page, page_size), many=True)
+        return Response({'count': qs.count(), 'redditors': serializer.data})
 
-    
+    # Return the trades for the specified Redditor.
+
     def retrieve(self, request, username=None):
         redditor = get_object_or_404(Redditor, username=username)
         trades = redditor.trades1.annotate(username2=F('user2__username'))
-        count = trades.count()
+        username = request.query_params.get('username', None)
+        min_date = request.query_params.get('min_date', None)
+        max_date = request.query_params.get('max_date', None)
         sort = request.query_params.get('sort', None)
         page = request.query_params.get('page', None)
         page_size = request.query_params.get('page_size', None)
 
+        if username is not None:
+            trades = trades.filter(username2__icontains=username)
+
+        if min_date is not None:
+            try:
+                date = datetime.strptime(min_date, '%Y-%m-%d')
+                trades = trades.filter(confirmation_datetime__gte=date)
+            except ValueError as e:
+                print(e)
+
+        if max_date is not None:
+            try:
+                date = datetime.strptime(max_date, '%Y-%m-%d')
+                trades = trades.filter(confirmation_datetime__lte=date)
+            except ValueError as e:
+                print(e)
+
         if sort is not None:
             if (sort == 'username2' or sort == '-username2' or
-                sort == 'confirmation_datetime' or sort == '-confirmation_datetime'):
+                    sort == 'confirmation_datetime' or sort == '-confirmation_datetime'):
                 trades = trades.order_by(sort)
 
-        serializer = TradeSerializer(paginate(trades, page, page_size), many=True)
-        return Response({ 'count': count, 'trades': serializer.data })
+        serializer = TradeSerializer(
+            paginate(trades, page, page_size), many=True)
+        return Response({'count': trades.count(), 'trades': serializer.data})
 
 
 class TradeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -106,9 +127,9 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
         permissions.AllowAny
     ]
     queryset = (Trade.objects.all()
-        .annotate(username1=F('user1__username'))
-        .annotate(username2=F('user2__username')))
-    
+                .annotate(username1=F('user1__username'))
+                .annotate(username2=F('user2__username')))
+
     def list(self, request):
         qs = self.queryset
         first_user = request.query_params.get('first_user', None)
@@ -142,8 +163,8 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
         if sort is not None:
             if (sort == 'username1' or sort == '-username1' or
                 sort == 'username2' or sort == '-username2' or
-                sort == 'confirmation_datetime' or sort == '-confirmation_datetime'):
+                    sort == 'confirmation_datetime' or sort == '-confirmation_datetime'):
                 qs = qs.order_by(sort)
 
         serializer = TradeSerializer(paginate(qs, page, page_size), many=True)
-        return Response({ 'count': qs.count(), 'trades': serializer.data })
+        return Response({'count': qs.count(), 'trades': serializer.data})
